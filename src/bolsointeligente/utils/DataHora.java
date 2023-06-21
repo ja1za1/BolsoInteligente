@@ -1,6 +1,8 @@
 package bolsointeligente.utils;
 
+import java.sql.Date;
 import java.time.LocalDate;
+import java.time.MonthDay;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.regex.PatternSyntaxException;
@@ -52,4 +54,42 @@ public class DataHora {
 		}
 		return obterLocalDateIsoDate(dataISO_DATE.toString());
 	}
+	
+	public static MonthDay obterMonthDayStringDiaMes(String diaMes) throws PatternSyntaxException{
+		String camposData[] = diaMes.split("/");
+		StringBuilder diaMesISO_DATE = new StringBuilder(7);
+		diaMesISO_DATE.append("--");
+		for(int i = camposData.length; i > 0; i--) {
+			diaMesISO_DATE.append(camposData[i-1]);
+			if(i != 1) {
+				diaMesISO_DATE.append("-");
+			}
+		}
+		return obterMonthDayIsoDate(diaMesISO_DATE.toString());
+	}
+	
+	private static MonthDay obterMonthDayIsoDate(String diaMes) throws DateTimeParseException{
+		return MonthDay.parse(diaMes);
+	}
+	
+	public static Date converterLocalDateParaDate(LocalDate data) {
+		return Date.valueOf(data);
+	}
+	
+	public static Date converterMonthDayParaDate(MonthDay diaMes) {
+		return Date.valueOf(converterMonthDayParaLocalDate(diaMes)); 
+	}
+	
+	public static LocalDate converterMonthDayParaLocalDate(MonthDay diaMes) {
+		return diaMes.atYear(LocalDate.now().getYear());
+	}
+	
+	public static String obterDiaMesFormatado(MonthDay diaMes) {
+		return diaMes.format(DateTimeFormatter.ofPattern("dd/MM"));
+	}
+	
+	
+	
+	
+	
 }

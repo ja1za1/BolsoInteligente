@@ -49,7 +49,7 @@ public class IgPesquisarDespesa extends JDialog {
 		
 		JTextField txtFieldItemDespesa = new JTextField();
 		lblItemDespesa.setLabelFor(txtFieldItemDespesa);
-		txtFieldItemDespesa.setBounds(115, 11, 185, 20);
+		txtFieldItemDespesa.setBounds(115, 11, 185, 23);
 		txtFieldItemDespesa.setColumns(10);
 		pnlPesquisarDespesa.add(txtFieldItemDespesa);
 		

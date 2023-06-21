@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import bolsointeligente.entities.Receita;
+import bolsointeligente.utils.DataHora;
 
 public class DaoReceita extends Dao<Receita> {
 
@@ -16,26 +17,34 @@ public class DaoReceita extends Dao<Receita> {
 
 	@Override
 	public void insert(Receita receita) throws SQLException {
-		String sqlRenda = "INSERT INTO renda (descricao) "
-				   		+ "VALUES (?)";
-		PreparedStatement preparedStatement;
-		
-		String sqlRendaMensal = "INSERT INTO renda_mensal (cod_renda, data, valor)"
-							  + "VALUES (?, ?, ?)";
+		PreparedStatement preparedStatement = null;
 		Connection conexaoBanco = getConexaoBanco();
 		
 		long codigoRenda = obterCodigoReceita(receita.getDescricao());
 		
 		if(codigoRenda == 0) {
-			preparedStatement = conexaoBanco.prepareStatement(sqlRenda);
-			preparedStatement.setString(1, receita.getDescricao());
-			preparedStatement.execute();
+			inserirRenda(preparedStatement, conexaoBanco, receita);
 			codigoRenda = obterCodigoReceita(receita.getDescricao());
 		}
+		inserirRendaMensal(preparedStatement, conexaoBanco, receita, codigoRenda);
+	}
+	
+	private void inserirRenda(PreparedStatement preparedStatement, Connection conexaoBanco, Receita receita) throws SQLException {
+		String sqlRenda = "INSERT INTO renda (descricao) "
+		   				+ "VALUES (?)";
+		
+		preparedStatement = conexaoBanco.prepareStatement(sqlRenda);
+		preparedStatement.setString(1, receita.getDescricao());
+		preparedStatement.execute();
+	}
+	
+	private void inserirRendaMensal(PreparedStatement preparedStatement, Connection conexaoBanco, Receita receita, long codigoRenda) throws SQLException{
+		String sqlRendaMensal = "INSERT INTO renda_mensal (cod_renda, data, valor) "
+				  			  + "VALUES (?, ?, ?)";
 		
 		preparedStatement = conexaoBanco.prepareStatement(sqlRendaMensal);
 		preparedStatement.setLong(1, codigoRenda);
-		preparedStatement.setDate(2, Date.valueOf(receita.getData()));
+		preparedStatement.setDate(2, DataHora.converterLocalDateParaDate(receita.getData()));
 		preparedStatement.setFloat(3, receita.getValor());
 		preparedStatement.execute();
 	}
@@ -54,19 +63,19 @@ public class DaoReceita extends Dao<Receita> {
 	}
 	
 	@Override
-	public ResultSet select(Receita dadosSelecionar) throws SQLException {
+	public ResultSet select(Receita receita) throws SQLException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
 	@Override
-	public void update(Receita dadosAtualizar) throws SQLException {
+	public void update(Receita receita) throws SQLException {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void delete(Receita dadosDeletar) throws SQLException {
+	public void delete(Receita receita) throws SQLException {
 		// TODO Auto-generated method stub
 		
 	}

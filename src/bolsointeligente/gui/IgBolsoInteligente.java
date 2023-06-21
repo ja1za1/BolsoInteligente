@@ -4,6 +4,7 @@ package bolsointeligente.gui;
 
 import javax.swing.JFrame;
 
+
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JButton;
@@ -18,9 +19,16 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.labels.PieSectionLabelGenerator;
+import org.jfree.chart.labels.PieToolTipGenerator;
+import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
+import org.jfree.chart.labels.StandardPieToolTipGenerator;
+import org.jfree.chart.plot.PieLabelLinkStyle;
+import org.jfree.chart.plot.PiePlot3D;
 import org.jfree.data.general.DefaultPieDataset;
 
 import bolsointeligente.entities.BolsoInteligente;
+import bolsointeligente.entities.GraficoPizza3D;
 import mos.es.InputOutput;
 
 import java.awt.event.KeyEvent;
@@ -125,6 +133,7 @@ public class IgBolsoInteligente extends JFrame{
 		cmbBoxCategoriaOrcamento.setBounds(218, 24, 119, 26);
 		pnlOrcamento.add(cmbBoxCategoriaOrcamento);
 		
+		
 		// Criar uma tabela de exemplo
         JTable tblOrcamento = new JTable();
         tblOrcamento.setFillsViewportHeight(true);
@@ -189,26 +198,47 @@ public class IgBolsoInteligente extends JFrame{
 		
 		// Criar um conjunto de dados para o gráfico de pizza
         DefaultPieDataset dataset = new DefaultPieDataset();
-        dataset.setValue("Maçã", 20.0);
+        dataset.setValue("Maçã", 20.7);
         dataset.setValue("Laranja", 30.0);
         dataset.setValue("Banana", 50.0);
+        dataset.setValue("Pera", 30.0);
+        
 
-        // Criar o gráfico de pizza
+//         Criar o gráfico de pizza
         JFreeChart chart = ChartFactory.createPieChart3D(
-                "Gráfico de Pizza", // título do gráfico
+                null, // título do gráfico
                 dataset, // conjunto de dados
                 true, // exibir legenda
                 true, // exibir dicas de ferramentas
                 false // não exibir URLs
         );
         
-
-		
+        chart.getPlot().setBackgroundPaint(Color.WHITE);
+        chart.getPlot().setOutlineVisible(false);
+     // Configurando o valor em cada fatia
+        PieSectionLabelGenerator labelGenerator = new StandardPieSectionLabelGenerator("{0}: {1}%");
+        PieToolTipGenerator toolTipGenerator = new StandardPieToolTipGenerator("{0}: {1}%");
+        ((PiePlot3D) chart.getPlot()).setLabelGenerator(labelGenerator);
+        ((PiePlot3D) chart.getPlot()).setLabelBackgroundPaint(Color.WHITE);
+        ((PiePlot3D) chart.getPlot()).setLabelLinkStyle(PieLabelLinkStyle.QUAD_CURVE);        
+        ((PiePlot3D) chart.getPlot()).setForegroundAlpha(0.4f);
+        ((PiePlot3D) chart.getPlot()).setToolTipGenerator(toolTipGenerator);
+        ((PiePlot3D) chart.getPlot()).setDarkerSides(true);
+        
+//        GraficoPizza3D graficoPizza3D = new GraficoPizza3D((PiePlot3D) ChartFactory.createPieChart3D(
+//                null, // título do gráfico
+//                dataset, // conjunto de dados
+//                true, // exibir legenda
+//                true, // exibir dicas de ferramentas
+//                false // não exibir URLs
+//        ).getPlot());
 		// Criar um painel de gráfico e adicioná-lo ao JFrame
 		ChartPanel chrtPnlGrafico = new ChartPanel(chart);
+		chrtPnlGrafico.setMouseWheelEnabled(true);
 		chrtPnlGrafico.setBorder(null);
-        chrtPnlGrafico.setBounds(667, 62, 500, 244);
+        chrtPnlGrafico.setBounds(675, 29, 505, 298);
 		pnlOrcamento.add(chrtPnlGrafico);
+		chrtPnlGrafico.setLayout(null);
 		
 		JPanel pnlCabecalho = new JPanel();
 		pnlCabecalho.setBackground(new Color(255, 255, 255));
@@ -344,16 +374,23 @@ public class IgBolsoInteligente extends JFrame{
 		UIManager.put("FileChooser.newFolderToolTipText", "Nova Pasta");
 		UIManager.put("FileChooser.listViewButtonToolTipText", "Lista");
 		UIManager.put("FileChooser.detailsViewButtonToolTipText", "Detalhes");
+		UIManager.put("FileChooser.viewMenuLabelText", "Visualizar em");
+		UIManager.put("FileChooser.refreshActionLabelText", "Atualizar");
+		UIManager.put("FileChooser.newFolderActionLabelText", "Nova Pasta");
+		UIManager.put("FileChooser.listViewActionLabelText", "Lista");
+		UIManager.put("FileChooser.detailsViewActionLabelText", "Detalhes");
+		
 	}
 
 	private void importarArquivo() {
+		final String TITULO_IMPORTACAO = "Importação";
 		if(flChserImportar == null) {
 			criarJanelaImportar();
 		}
 		int opcao = flChserImportar.showOpenDialog(frmBolsoInteligente);
 		
 		if(opcao == JFileChooser.APPROVE_OPTION) {
-			BolsoInteligente.importarArquivos(flChserImportar.getSelectedFiles());
+			InputOutput.showInfo(BolsoInteligente.importarArquivos(flChserImportar.getSelectedFiles()), TITULO_IMPORTACAO); ;
 		}
 	}
 }
