@@ -2,7 +2,7 @@ package bolsointeligente.entities;
 
 import java.time.LocalDate;
 
-import bolsointeligente.utils.DataHora;
+
 
 public class Receita {
 	
@@ -34,11 +34,6 @@ public class Receita {
 	public void setValor(float valor) {
 		this.valor = valor;
 	}
-	@Override
-	public String toString() {
-		return String.format("%s - %s - %,.2f", descricao, DataHora.obterDataFormatada(data), valor);
-	}
-	
 	
 
 }

@@ -1,9 +1,9 @@
 package bolsointeligente.entities;
 
 import java.time.LocalDate;
+
 import java.time.MonthDay;
 
-import bolsointeligente.utils.DataHora;
 
 public class Despesa {
 	private String descricao;
@@ -81,11 +81,5 @@ public class Despesa {
 		this.pago = situacao;
 	}
 
-	@Override
-	public String toString() {
-		return String.format(
-				"%s - %s - %s - %s - %s - %,.2f - Pago: %s",
-				descricao, diaPagamento, categoria, formaPagamento, DataHora.obterDataFormatada(data), valor, pago);
-	}
 	
 }

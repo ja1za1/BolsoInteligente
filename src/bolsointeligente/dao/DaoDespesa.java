@@ -141,7 +141,6 @@ public class DaoDespesa extends Dao<Despesa> {
 
 	@Override
 	public ResultSet select(Despesa despesa) throws SQLException {
-		String consultaSQL = "SELECT * FROM despesa";
 		return null;
 	}
 
