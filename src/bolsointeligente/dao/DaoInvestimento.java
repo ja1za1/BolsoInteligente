@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import bolsointeligente.entities.Investimento;
 import bolsointeligente.utils.DataHora;
@@ -47,7 +48,7 @@ public class DaoInvestimento extends Dao<Investimento> {
 
 
 	@Override
-	public ResultSet select(Investimento dadosSelecionar) throws SQLException {
+	public List<Investimento> select() throws SQLException {
 		// TODO Auto-generated method stub
 		return null;
 	}

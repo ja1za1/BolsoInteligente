@@ -6,15 +6,17 @@ import java.time.MonthDay;
 
 
 public class Despesa {
-	private String descricao;
-	private Categoria categoria;
+	private String descricao,
+				   categoria,
+				   formaPagamento;
 	private MonthDay diaPagamento;
-	private FormaPagamento formaPagamento;
 	private LocalDate data;
 	private Float valor;
-	private boolean pago;
+	private boolean situacao;
 	
-	public Despesa(String descricao, MonthDay diaPagamento, Categoria categoria, FormaPagamento formaPagamento,
+	public Despesa () {}
+	
+	public Despesa(String descricao, MonthDay diaPagamento, String categoria, String formaPagamento,
 			LocalDate data, Float valor, boolean pago) {
 		this.descricao = descricao;
 		this.diaPagamento = diaPagamento;
@@ -22,7 +24,7 @@ public class Despesa {
 		this.formaPagamento = formaPagamento;
 		this.data = data;
 		this.valor = valor;
-		this.pago = pago;
+		this.situacao = pago;
 	}
 
 	public String getDescricao() {
@@ -41,19 +43,19 @@ public class Despesa {
 		this.diaPagamento = diaPagamento;
 	}
 
-	public Categoria getCategoria() {
+	public String getCategoria() {
 		return categoria;
 	}
 
-	public void setCategoria(Categoria categoria) {
+	public void setCategoria(String categoria) {
 		this.categoria = categoria;
 	}
 
-	public FormaPagamento getFormaPagamento() {
+	public String getFormaPagamento() {
 		return formaPagamento;
 	}
 
-	public void setFormaPagamento(FormaPagamento formaPagamento) {
+	public void setFormaPagamento(String formaPagamento) {
 		this.formaPagamento = formaPagamento;
 	}
 
@@ -73,12 +75,12 @@ public class Despesa {
 		this.valor = valor;
 	}
 
-	public boolean getPago() {
-		return pago;
+	public boolean getSituacao() {
+		return situacao;
 	}
 
 	public void setSituacao(boolean situacao) {
-		this.pago = situacao;
+		this.situacao = situacao;
 	}
 
 	

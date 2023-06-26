@@ -10,6 +10,8 @@ public class Receita {
 	private String descricao;
 	private float valor;
 	
+	public Receita() {}
+	
 	public Receita(LocalDate data, String descricao, float valor) {
 		this.data = data;
 		this.descricao = descricao;

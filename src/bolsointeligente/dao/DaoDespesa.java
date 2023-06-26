@@ -4,11 +4,19 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.MonthDay;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import bolsointeligente.entities.Despesa;
 import bolsointeligente.utils.DataHora;
 
 public class DaoDespesa extends Dao<Despesa> {
+	
+	private final static long NAO_CADASTRADO = 0;
 	
 	public DaoDespesa(Connection conexaoBanco) {
 		super(conexaoBanco);
@@ -19,29 +27,28 @@ public class DaoDespesa extends Dao<Despesa> {
 		PreparedStatement preparedStatement = null;
 		Connection conexaoBanco = getConexaoBanco();
 
-		long codigoFormaPagamento = obterCodigoFormaPagamento(despesa.getFormaPagamento().toString());
+		long codigoFormaPagamento = obterCodigoFormaPagamento(despesa.getFormaPagamento());
 		
-		if(codigoFormaPagamento == 0) {
+		if(codigoFormaPagamento == NAO_CADASTRADO) {
 			inserirFormaPagamento(preparedStatement,conexaoBanco,despesa);
-			codigoFormaPagamento = obterCodigoFormaPagamento(despesa.getFormaPagamento().toString());
+			codigoFormaPagamento = obterCodigoFormaPagamento(despesa.getFormaPagamento());
 		}
 		
-		long codigoCategoria = obterCodigoCategoria(despesa.getCategoria().toString());
+		long codigoCategoria = obterCodigoCategoria(despesa.getCategoria());
 		
-		if(codigoCategoria == 0) {
+		if(codigoCategoria == NAO_CADASTRADO) {
 			inserirCategoria(preparedStatement,conexaoBanco,despesa);
-			codigoCategoria = obterCodigoCategoria(despesa.getCategoria().toString());
+			codigoCategoria = obterCodigoCategoria(despesa.getCategoria());
 		}
 		
 		long codigoDespesa = obterCodigoDespesa(despesa.getDescricao(),codigoCategoria);
 		
-		if(codigoDespesa == 0) {
+		if(codigoDespesa == NAO_CADASTRADO) {
 			inserirDespesa(preparedStatement,conexaoBanco,despesa,codigoCategoria);
 			codigoDespesa = obterCodigoDespesa(despesa.getDescricao(), codigoCategoria);
 		}
 		
 		inserirOrcamento(preparedStatement, conexaoBanco, despesa, codigoDespesa,codigoFormaPagamento);
-		
 	}
 	
 
@@ -57,7 +64,7 @@ public class DaoDespesa extends Dao<Despesa> {
 		preparedStatement.setDate(4, DataHora.converterMonthDayParaDate(despesa.getDiaPagamento()));
 		preparedStatement.setLong(5, codigoFormaPagamento);
 		preparedStatement.setFloat(6, despesa.getValor());
-		preparedStatement.setBoolean(7, despesa.getPago());
+		preparedStatement.setBoolean(7, despesa.getSituacao());
 		preparedStatement.execute();
 		
 	}
@@ -76,7 +83,7 @@ public class DaoDespesa extends Dao<Despesa> {
 							+ "VALUES (?)";
 		
 		preparedStatement = conexaoBanco.prepareStatement(sqlCategoria);
-		preparedStatement.setString(1, despesa.getCategoria().toString());
+		preparedStatement.setString(1, despesa.getCategoria());
 		preparedStatement.execute();
 	}
 
@@ -85,7 +92,7 @@ public class DaoDespesa extends Dao<Despesa> {
 								 + "VALUES (?)";
 		
 		preparedStatement = conexaoBanco.prepareStatement(sqlFormaPagamento);
-		preparedStatement.setString(1, despesa.getFormaPagamento().toString());
+		preparedStatement.setString(1, despesa.getFormaPagamento());
 		preparedStatement.execute();
 	}
 
@@ -98,7 +105,7 @@ public class DaoDespesa extends Dao<Despesa> {
 		preparedStatement.setString(1, descricaoFormaPagamento);
 		ResultSet tabelaDados = preparedStatement.executeQuery();
 		
-		return (tabelaDados.next()) ? tabelaDados.getLong("codigo") : 0l;
+		return (tabelaDados.next()) ? tabelaDados.getLong("codigo") : NAO_CADASTRADO;
 	}
 	
 	private long obterCodigoCategoria(String descricaoCategoria) throws SQLException {
@@ -110,7 +117,7 @@ public class DaoDespesa extends Dao<Despesa> {
 		preparedStatement.setString(1, descricaoCategoria);
 		ResultSet tabelaDados = preparedStatement.executeQuery();
 		
-		return (tabelaDados.next()) ? tabelaDados.getLong("codigo") : 0l;
+		return (tabelaDados.next()) ? tabelaDados.getLong("codigo") : NAO_CADASTRADO;
 	}
 	
 	private long obterCodigoDespesa(String descricaoDespesa, long codigoCategoria) throws SQLException {
@@ -124,7 +131,7 @@ public class DaoDespesa extends Dao<Despesa> {
 		preparedStatement.setLong(2, codigoCategoria);
 		ResultSet tabelaDados = preparedStatement.executeQuery();
 		
-		return (tabelaDados.next()) ? tabelaDados.getLong("codigo") : 0l;
+		return (tabelaDados.next()) ? tabelaDados.getLong("codigo") : NAO_CADASTRADO;
 	}
 
 	@Override
@@ -140,8 +147,33 @@ public class DaoDespesa extends Dao<Despesa> {
 
 
 	@Override
-	public ResultSet select(Despesa despesa) throws SQLException {
-		return null;
+	public List<Despesa> select() throws SQLException {
+		List<Despesa> despesas = new ArrayList<>();
+		String sqlConsultaDespesa = "SELECT orc.data_despesa, orc.data_pagamento, pag.descricao AS forma_pagamento, desp.descricao AS descricao, orc.valor, orc.situacao, cat.descricao AS categoria "
+							+ "FROM orcamento AS orc "
+							+ "INNER JOIN despesa AS desp "
+							+ "ON orc.cod_despesa = desp.codigo "
+							+ "INNER JOIN forma_pagamento AS pag "
+							+ "ON orc.cod_forma_pagamento = pag.codigo "
+							+ "INNER JOIN categoria AS cat "
+							+ "ON desp.cod_categoria = cat.codigo";
+		
+		try (PreparedStatement preparedStatement = getConexaoBanco().prepareStatement(sqlConsultaDespesa)){
+			ResultSet tabelaDados = preparedStatement.executeQuery();
+			while(tabelaDados.next()) {
+				Despesa despesa = new Despesa();
+				despesa.setData(tabelaDados.getDate("data_despesa").toLocalDate());
+				LocalDate dataPagamento = tabelaDados.getDate("data_pagamento").toLocalDate();
+				despesa.setDiaPagamento(MonthDay.of(dataPagamento.getMonthValue(), dataPagamento.getDayOfMonth()));
+				despesa.setFormaPagamento(tabelaDados.getString("forma_pagamento"));
+				despesa.setDescricao(tabelaDados.getString("descricao"));
+				despesa.setValor(tabelaDados.getFloat("valor"));
+				despesa.setSituacao(tabelaDados.getBoolean("situacao"));
+				despesa.setCategoria(tabelaDados.getString("categoria"));
+				despesas.add(despesa);
+			}
+		}
+		return despesas;
 	}
 
 }

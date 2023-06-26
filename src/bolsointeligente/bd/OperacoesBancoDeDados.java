@@ -1,7 +1,7 @@
 package bolsointeligente.bd;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 public interface OperacoesBancoDeDados<T> {
 	
@@ -11,6 +11,6 @@ public interface OperacoesBancoDeDados<T> {
 	
 	void insert(T dadosInserir) throws SQLException;
 	
-	ResultSet select(T dadosSelecionar) throws SQLException;
+	List<T> select() throws SQLException;
 	
 }

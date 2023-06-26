@@ -2,6 +2,7 @@ package bolsointeligente.entities.importfiles;
 
 import java.io.File;
 
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -14,9 +15,7 @@ import bolsointeligente.dao.DaoDespesa;
 import bolsointeligente.dao.DaoInvestimento;
 import bolsointeligente.dao.DaoReceita;
 import bolsointeligente.entities.BolsoInteligente;
-import bolsointeligente.entities.Categoria;
 import bolsointeligente.entities.Despesa;
-import bolsointeligente.entities.FormaPagamento;
 import bolsointeligente.entities.Investimento;
 import bolsointeligente.entities.Receita;
 import bolsointeligente.utils.DataHora;
@@ -213,12 +212,10 @@ public class ImportarArquivos implements ImportacaoArquivo {
 					continue;
 				}
 				
-				String formaPagamentoString = linhasArquivo.get(linhaCorrente).getData(COLUNA_FORMA_PAGAMENTO);
-				FormaPagamento formaPagamento;
-				formaPagamento = FormaPagamento.obterFormaPagamento(formaPagamentoString);
-				if(formaPagamento == null) {
-					final String FORMA_PAGAMENTO_INVALIDA = String.format("\n'%s': A forma de pagamento na linha %d coluna %d é inválida.", nomeArquivo,linhaCorrente,COLUNA_FORMA_PAGAMENTO+1);
-					problemasImportacaoArquivo.append(FORMA_PAGAMENTO_INVALIDA);
+				String formaPagamento = linhasArquivo.get(linhaCorrente).getData(COLUNA_FORMA_PAGAMENTO);
+				if(formaPagamento.isBlank()) {
+					final String FORMA_PAGAMENTO_VAZIA = String.format("\n'%s': A forma de pagamento na linha %d coluna %d está vazia.", nomeArquivo,linhaCorrente,COLUNA_FORMA_PAGAMENTO+1);
+					problemasImportacaoArquivo.append(FORMA_PAGAMENTO_VAZIA);
 					continue;
 				}
 				
@@ -230,12 +227,10 @@ public class ImportarArquivos implements ImportacaoArquivo {
 					continue;
 				}
 				
-				String categoriaString = linhasArquivo.get(linhaCorrente).getData(COLUNA_CATEGORIA);
-				Categoria categoria;
-				categoria = Categoria.obterCategoria(categoriaString);
-				if(categoria == null) {
-					final String CATEGORIA_INVALIDA = String.format("\n'%s': A categoria na linha %d coluna %d é inválida", nomeArquivo, linhaCorrente, COLUNA_CATEGORIA+1);
-					problemasImportacaoArquivo.append(CATEGORIA_INVALIDA);
+				String categoria = linhasArquivo.get(linhaCorrente).getData(COLUNA_CATEGORIA);
+				if(categoria.isBlank()) {
+					final String CATEGORIA_VAZIA = String.format("\n'%s': A categoria na linha %d coluna %d está vazia", nomeArquivo, linhaCorrente, COLUNA_CATEGORIA+1);
+					problemasImportacaoArquivo.append(CATEGORIA_VAZIA);
 					continue;
 				}
 				
@@ -262,7 +257,9 @@ public class ImportarArquivos implements ImportacaoArquivo {
 					}
 				}
 				Despesa despesa = new Despesa(descricao, diaPagamento, categoria, formaPagamento, dataDespesa, valorDespesa, pago);
-				Dao.inserirDadosBancoDeDados(new DaoDespesa(BolsoInteligente.conexaoBancodeDados.getConexaoBanco()), despesa);
+				DaoDespesa daoDespesa = new DaoDespesa(BolsoInteligente.conexaoBancodeDados.getConexaoBanco());
+				Dao.inserirDadosBancoDeDados(daoDespesa, despesa);
+				BolsoInteligente.adicionarDespesas(daoDespesa.select());
 				linhasImportadasSucesso++;
 				
 			}catch (SQLException sqlException) {

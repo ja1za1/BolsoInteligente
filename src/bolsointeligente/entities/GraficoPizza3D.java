@@ -3,6 +3,7 @@ package bolsointeligente.entities;
 import java.awt.Color;
 
 
+
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.labels.PieSectionLabelGenerator;
 import org.jfree.chart.labels.PieToolTipGenerator;
@@ -11,7 +12,9 @@ import org.jfree.chart.labels.StandardPieToolTipGenerator;
 import org.jfree.chart.plot.PieLabelLinkStyle;
 import org.jfree.chart.plot.PiePlot3D;
 
-public class GraficoPizza3D extends JFreeChart {
+public class GraficoPizza3D{
+	
+	private JFreeChart graficoPizza3D;
 	
 	private PiePlot3D plotGraficoPizza3D;
 	
@@ -29,12 +32,18 @@ public class GraficoPizza3D extends JFreeChart {
 	
 	private final float TRANSPARENCIA_GRAFICO = 0.6f;
 
-	public GraficoPizza3D(PiePlot3D plot) {
-		super(plot);
-		plotGraficoPizza3D = plot;
+	public GraficoPizza3D(JFreeChart graficoPizza3D) throws ClassCastException{
+		this.graficoPizza3D = graficoPizza3D;
+		plotGraficoPizza3D = (PiePlot3D)graficoPizza3D.getPlot();
 		definirAtributosPadrão();
 	}
 	
+	
+	
+	public JFreeChart getGraficoPizza3D() {
+		return graficoPizza3D;
+	}
+
 	private void definirAtributosPadrão() {
 		alterarCorFundoGrafico(COR_FUNDO);
 		exibirBordasGrafico(EXIBIR_BORDAS_GRAFICO);

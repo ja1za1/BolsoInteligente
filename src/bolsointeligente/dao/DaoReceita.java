@@ -5,11 +5,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import bolsointeligente.entities.Receita;
 import bolsointeligente.utils.DataHora;
 
 public class DaoReceita extends Dao<Receita> {
+	
+	private final static long NAO_CADASTRADO = 0;
 
 	public DaoReceita(Connection conexaoBanco) {
 		super(conexaoBanco);
@@ -22,7 +26,7 @@ public class DaoReceita extends Dao<Receita> {
 		
 		long codigoRenda = obterCodigoReceita(receita.getDescricao());
 		
-		if(codigoRenda == 0) {
+		if(codigoRenda == NAO_CADASTRADO) {
 			inserirRenda(preparedStatement, conexaoBanco, receita);
 			codigoRenda = obterCodigoReceita(receita.getDescricao());
 		}
@@ -58,14 +62,40 @@ public class DaoReceita extends Dao<Receita> {
 		preparedStatement.setString(1, descricao);
 		ResultSet tabelaDados = preparedStatement.executeQuery();
 		
-		return (tabelaDados.next()) ? tabelaDados.getLong("codigo") : 0l;
+		return (tabelaDados.next()) ? tabelaDados.getLong("codigo") : NAO_CADASTRADO;
 		
 	}
 	
 	@Override
-	public ResultSet select(Receita receita) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+	public List<Receita> select() throws SQLException {
+		List<Receita> receitas = new ArrayList<>();
+		String sqlConsultaReceitas = "SELECT renda.descricao,renda_m.data,renda_m.valor "
+								   + "FROM renda "
+								   + "INNER JOIN renda_mensal AS renda_m "
+								   + "ON renda_m.cod_renda = renda.codigo";
+		try(PreparedStatement preparedStatement = getConexaoBanco().prepareStatement(sqlConsultaReceitas)){
+			ResultSet tabelaDados = preparedStatement.executeQuery();
+			while(tabelaDados.next()) {
+				Receita receita = new Receita();
+				receita.setDescricao(tabelaDados.getString("descricao"));
+				receita.setValor(tabelaDados.getFloat("valor"));
+				receita.setData(tabelaDados.getDate("data").toLocalDate());
+				receitas.add(receita);
+			}
+		}
+		return receitas;
+	}
+	
+	public List<Float> selectValoresReceita() throws SQLException{
+		String sqlConsultaValoresReceitas = "SELECT valor FROM renda_mensal";
+		List<Float> valoresReceitas = new ArrayList<>();
+		try (PreparedStatement preparedStatement = getConexaoBanco().prepareStatement(sqlConsultaValoresReceitas)){
+			ResultSet tabelaDados = preparedStatement.executeQuery();
+			while(tabelaDados.next()) {
+				valoresReceitas.add(tabelaDados.getFloat("valor"));
+			}
+		}
+		return valoresReceitas;
 	}
 	
 	@Override

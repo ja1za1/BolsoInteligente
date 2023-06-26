@@ -1,3 +1,11 @@
 DataDespesa;DiaPagamento;FormaPagamento;Descrição;Categoria;Valor;Situação
 05/06/2023;05/06;CD;Cinema;Lazer;14,50;Paga
 06/06/2023;10/06;CC;Jantar Romântico;Alimentação;254,43;
+07/06/2023;09/06;CD;Crossfire;Lazer;140,00;
+09/06/2023;11/06;CC;Bronquite;Saúde;579,99;
+12/06/2023;14/06;CC;Chuteira;Lazer;500,52;
+01/07/2023;08/07;CD;Motel;Lazer;80,00;
+23/07/2023;28/07;CD;Praia;Lazer;200,79;
+25/07/2023;29/07;CD;Bola;Lazer;70,59;
+28/07/2023;30/07;CD;Tenis;Lazer;60,00;
+01/07/2023;02/08;CD;Playstation 5;Lazer;4.000,00;
