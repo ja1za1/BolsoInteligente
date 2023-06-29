@@ -98,6 +98,22 @@ public class DaoReceita extends Dao<Receita> {
 		return valoresReceitas;
 	}
 	
+	public List<Float> selectValoresReceitasMensal(int numeroMes) throws SQLException{
+		String sqlConsultaValoresReceitasMensal = "SELECT valor FROM renda_mensal "
+												+ "WHERE EXTRACT(MONTH FROM renda_mensal.data) = ?";
+		
+		List<Float> valoresReceitaMensal = new ArrayList<>();
+		
+		try (PreparedStatement preparedStatement = getConexaoBanco().prepareStatement(sqlConsultaValoresReceitasMensal)){
+			preparedStatement.setInt(1, numeroMes);
+			ResultSet tabelaDados = preparedStatement.executeQuery();
+			while(tabelaDados.next()) {
+				valoresReceitaMensal.add(tabelaDados.getFloat("valor"));
+			}
+		}
+		return valoresReceitaMensal;
+	}
+	
 	@Override
 	public void update(Receita receita) throws SQLException {
 		// TODO Auto-generated method stub

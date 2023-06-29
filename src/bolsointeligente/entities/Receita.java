@@ -30,7 +30,7 @@ public class Receita {
 	public void setDescricao(String descricao) {
 		this.descricao = descricao;
 	}
-	public float getValor() {
+	public Float getValor() {
 		return valor;
 	}
 	public void setValor(float valor) {

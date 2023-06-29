@@ -1,8 +1,8 @@
 package bolsointeligente.entities;
 
 import java.awt.Color;
-
-
+import java.text.AttributedString;
+import java.text.DecimalFormat;
 
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.labels.PieSectionLabelGenerator;
@@ -11,6 +11,7 @@ import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 import org.jfree.chart.labels.StandardPieToolTipGenerator;
 import org.jfree.chart.plot.PieLabelLinkStyle;
 import org.jfree.chart.plot.PiePlot3D;
+import org.jfree.data.general.PieDataset;
 
 public class GraficoPizza3D{
 	
@@ -24,11 +25,12 @@ public class GraficoPizza3D{
 	private final boolean EXIBIR_BORDAS_GRAFICO = false,
 						  LADOS_ESCUROS         = true;
 	
-	private final PieSectionLabelGenerator GERADOR_LEGENDA = new StandardPieSectionLabelGenerator("{0}: {1}%");
+	private final static DecimalFormat FORMATO_DECIMAL = new DecimalFormat("0.00");
+	private final PieSectionLabelGenerator GERADOR_LEGENDA = new StandardPieSectionLabelGenerator("{0}: {1}%",FORMATO_DECIMAL,FORMATO_DECIMAL);
 
 	private final PieLabelLinkStyle ESTILO_LINHAS_CONEXAO_LEGENDA = PieLabelLinkStyle.QUAD_CURVE;
 	
-	private final PieToolTipGenerator GERADOR_TEXTO_AJUDA = new StandardPieToolTipGenerator("{0}: {1}%");
+	private final PieToolTipGenerator GERADOR_TEXTO_AJUDA = new StandardPieToolTipGenerator("{0}: {1}%",FORMATO_DECIMAL,FORMATO_DECIMAL);
 	
 	private final float TRANSPARENCIA_GRAFICO = 0.6f;
 
@@ -43,6 +45,13 @@ public class GraficoPizza3D{
 	public JFreeChart getGraficoPizza3D() {
 		return graficoPizza3D;
 	}
+	
+	
+	
+	public PiePlot3D getPlotGraficoPizza3D() {
+		return plotGraficoPizza3D;
+	}
+
 
 	private void definirAtributosPadrão() {
 		alterarCorFundoGrafico(COR_FUNDO);
@@ -95,14 +104,4 @@ public class GraficoPizza3D{
 		return this;
 	}
 	
-	
-	
-	
-	
-
-	
-	
-	
-	
-
 }

@@ -3,6 +3,7 @@ package bolsointeligente.entities.importfiles;
 import java.io.File;
 
 
+
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -106,8 +107,8 @@ public class ImportarArquivos implements ImportacaoArquivo {
 
 	private String lerDadosArquivo(List<Line> linhasArquivo, String nomeArquivo) {
 
-		final int QUANTIDADE_LINHAS  = linhasArquivo.size(),
-				  QUANTIDADE_COLUNAS = (QUANTIDADE_LINHAS != 0) ? linhasArquivo.get(0).quantityOfData() : COLUNAS_VAZIAS;
+		final long QUANTIDADE_LINHAS  = linhasArquivo.stream().filter(x -> !x.getLine()[0].isBlank()).count(); 
+		final int  QUANTIDADE_COLUNAS = (QUANTIDADE_LINHAS != 0) ? linhasArquivo.get(0).quantityOfData() : COLUNAS_VAZIAS;
 		
 		int linhasImportadasSucesso = 0;
 		
@@ -179,7 +180,10 @@ public class ImportarArquivos implements ImportacaoArquivo {
 		for(int linhaCorrente = 1; linhaCorrente < linhasArquivo.size(); linhaCorrente++) {
 			try {
 				String dataDespesaString = linhasArquivo.get(linhaCorrente).getData(COLUNA_DATA_DESPESA);
-				if(!ValidarCampos.verificarDataValida(dataDespesaString)) {
+				if(dataDespesaString.isBlank()) {
+					continue;
+				}
+				else if(!ValidarCampos.verificarDataValida(dataDespesaString)) {
 					// DATA FORMATADA ERRONEAMENTE (Fora do padrao DD/MM/YYYY ou MM/DD/YYYY)
 					final String FORMATO_DATA_INVALIDO = String.format("\n'%s': A data da despesa na linha %d coluna %d está formatada errada.", nomeArquivo,linhaCorrente,COLUNA_DATA_DESPESA+1);
 					problemasImportacaoArquivo.append(FORMATO_DATA_INVALIDO);
@@ -259,7 +263,6 @@ public class ImportarArquivos implements ImportacaoArquivo {
 				Despesa despesa = new Despesa(descricao, diaPagamento, categoria, formaPagamento, dataDespesa, valorDespesa, pago);
 				DaoDespesa daoDespesa = new DaoDespesa(BolsoInteligente.conexaoBancodeDados.getConexaoBanco());
 				Dao.inserirDadosBancoDeDados(daoDespesa, despesa);
-				BolsoInteligente.adicionarDespesas(daoDespesa.select());
 				linhasImportadasSucesso++;
 				
 			}catch (SQLException sqlException) {

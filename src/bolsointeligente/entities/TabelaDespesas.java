@@ -1,14 +1,24 @@
 package bolsointeligente.entities;
 
 import java.awt.Color;
+
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Font;
+import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.DefaultCellEditor;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JTable;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
@@ -16,10 +26,11 @@ import javax.swing.table.TableColumn;
 import com.github.lgooddatepicker.tableeditors.DateTableEditor;
 
 
-public class TabelaDespesas {
+public class TabelaDespesas implements TableModelListener{
 	
 	public static final String[] NOME_COLUNAS = {"Data", "Dia", "Tipo", "Descrição", "Valor", "Paga" };
-	private final int QUANTIDADE_COLUNAS_INICIAL = 0;
+	
+	private final int QUANTIDADE_COLUNAS_INICIAL = 2;
 	
 	private JTable tabelaDespesas;
 	private DefaultTableModel modeloTabelaDespesa;
@@ -33,9 +44,11 @@ public class TabelaDespesas {
 			public Class<?> getColumnClass(int coluna) {
 				return CLASSES_COLUNAS[coluna];
 			}
-			
+
 		};
+		modeloTabelaDespesa.addTableModelListener(this);
 		tabelaDespesas = new JTable(modeloTabelaDespesa);
+		
 		
 		definirRenderizadoresColunas();
 		definirLarguraColunas();
@@ -45,7 +58,6 @@ public class TabelaDespesas {
 		gerarAutoRowSorter();
 		definirCorFundo();
 		definirTabelaAjustaTamanhoViewport();
-		inicializarDadosTabela();
 	}
 	
 	private void definirAlturaLinhas() {
@@ -59,14 +71,25 @@ public class TabelaDespesas {
 		datePicker.clickCountToEdit = 2;
 		tabelaDespesas.getColumnModel().getColumn(0).setCellEditor(datePicker);
 		tabelaDespesas.setDefaultRenderer(Integer.class, new RenderizadorInteger());
+		JComboBox<Integer> quantidadeDiasMes = new JComboBox<>();
+		tabelaDespesas.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(quantidadeDiasMes));
 		tabelaDespesas.setDefaultRenderer(Float.class, new RenderizadorFloat());
 	}
 
-	private void inicializarDadosTabela() {
-		List<Despesa> despesasCadastradas = BolsoInteligente.despesas;
+	public void atualizarDadosTabela(String categoria, int numeroMes) {
+
+		List<Despesa> despesas;
+		
+		try {
+			despesas = BolsoInteligente.obterDespesasCategoriaMes(categoria, numeroMes);
+		} catch (SQLException e) {
+			despesas = new ArrayList<>();
+		}
+		limparLinhasTabela();
+		modeloTabelaDespesa.setRowCount(QUANTIDADE_COLUNAS_INICIAL);
 		Object[] valores = null;
 		int linha = 0;
-		for(Despesa despesa : despesasCadastradas) {
+		for(Despesa despesa : despesas) {
 			valores = new Object[] {
 				despesa.getData(),
 				despesa.getDiaPagamento().getDayOfMonth(),
@@ -75,9 +98,43 @@ public class TabelaDespesas {
 				despesa.getValor(),
 				despesa.getSituacao()
 			};
-			atualizarTabela(valores, linha);
+			inserirLinhaTabela(valores, linha);
 			linha++;
 		}
+	}
+	
+	@Override
+	public void tableChanged(TableModelEvent e) {
+		if(e.getType() == TableModelEvent.UPDATE) {
+			int row = e.getFirstRow();
+	        int column = e.getColumn();
+	        DefaultTableModel model = (DefaultTableModel)e.getSource();
+	        String columnName = model.getColumnName(column);
+	        Object data = model.getValueAt(row, column);
+	        Container container = tabelaDespesas.getParent();
+	        
+	        
+	        System.out.println(String.format("Linha = %d Coluna = %d\nNome coluna = %s\n\n" + data, row,column,columnName));
+	        System.out.println("nome componente = " + container.getName());
+		}
+		else if(e.getType() == TableModelEvent.INSERT) {
+			LocalDate data = (LocalDate)modeloTabelaDespesa.getValueAt(e.getFirstRow(), 0);
+			if(data != null) {
+				int diaSelecionado = (int) modeloTabelaDespesa.getValueAt(e.getFirstRow(), 1);
+				int daysInMonth = YearMonth.of(2023, data.getMonthValue()).lengthOfMonth();
+				@SuppressWarnings("unchecked")
+				JComboBox<Integer> comboBox = (JComboBox<Integer>)((DefaultCellEditor) tabelaDespesas.getCellEditor(e.getFirstRow(), 1)).getComponent();
+				comboBox.removeAllItems();
+		        for (int i = 1; i <= daysInMonth; i++) {
+		        	comboBox.addItem(i);
+		        }
+		        comboBox.setSelectedItem(diaSelecionado);
+			}
+		}
+	}
+
+	private void limparLinhasTabela() {
+		this.modeloTabelaDespesa.setRowCount(0);
 	}
 
 	private void definirTabelaAjustaTamanhoViewport() {
@@ -99,20 +156,21 @@ public class TabelaDespesas {
 	private void definirLarguraColunas() {
 		for(int i = 0; i < tabelaDespesas.getModel().getColumnCount(); i++) {
 			TableColumn coluna = tabelaDespesas.getColumnModel().getColumn(i);
-			if(i == 3) {
-				coluna.setPreferredWidth(200);
-			}
-			else if(i == 0) {
+			
+			if(i == 0) {
 				coluna.setPreferredWidth(150);
 			}
 			else if(i == 1) {
-				coluna.setPreferredWidth(25);
+				coluna.setPreferredWidth(50);
+			}
+			else if(i == 3) {
+				coluna.setPreferredWidth(200);
 			}
 			else if(i == 4) {
 				coluna.setPreferredWidth(100);
 			}
 			else {
-				coluna.setPreferredWidth(50);
+				coluna.setPreferredWidth(70);
 			}
 		}
 	}
@@ -134,7 +192,7 @@ public class TabelaDespesas {
 		this.tabelaDespesas = tabelaDespesas;
 	}
 
-	public void atualizarTabela(Object[] dadosInserir, int linha) {
+	public void inserirLinhaTabela(Object[] dadosInserir, int linha) {
 		modeloTabelaDespesa.insertRow(linha, dadosInserir);
 	}
 
@@ -187,6 +245,5 @@ public class TabelaDespesas {
 		
 		
 	}
-	
 	
 }

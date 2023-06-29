@@ -1,6 +1,7 @@
 package bolsointeligente.entities;
 
 import java.awt.Color;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
@@ -19,7 +20,7 @@ public class GraficoBarras {
 	private final static Color COR_FUNDO_PADRAO = Color.WHITE;
 	private final static boolean EXIBIR_LINHAS_BORDA = false;
 	private final static DecimalFormat FORMATO_DECIMAL = new DecimalFormat("0.00%");
-	private final static StandardCategoryToolTipGenerator TEXTO_AJUDA = new StandardCategoryToolTipGenerator("{0} - {1}: {2}", FORMATO_DECIMAL);
+	private final static StandardCategoryToolTipGenerator TEXTO_AJUDA = new StandardCategoryToolTipGenerator("{0}: {2}", FORMATO_DECIMAL);
 	private final static StandardCategoryItemLabelGenerator TEXTO_LEGENDA = new StandardCategoryItemLabelGenerator("{2}", FORMATO_DECIMAL);
 	
 	private JFreeChart graficoBarras;
@@ -80,6 +81,11 @@ public class GraficoBarras {
 
 	public JFreeChart getGraficoBarras() {
 		return graficoBarras;
+	}
+	
+	
+	public CategoryPlot getPlotGraficoBarras() {
+		return plotGraficoBarras;
 	}
 
 	public GraficoBarras definirCorDeFundo(Color cor) {

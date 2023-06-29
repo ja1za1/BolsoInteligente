@@ -15,7 +15,7 @@ import javax.swing.JTextField;
 import javax.swing.JRadioButton;
 import java.awt.event.KeyEvent;
 
-public class IgPesquisarDespesa extends JDialog {
+public class IgPesquisarDespesa{
 
 	private final boolean MODAL = true;
 	private final String TITULO_JANELA = "Pesquisar Despesa";
@@ -29,7 +29,7 @@ public class IgPesquisarDespesa extends JDialog {
 	 */
 	public IgPesquisarDespesa(JFrame framePai,JButton botaoClicado) {
 		jDialogPesquisarDespesa = new JDialog(framePai, TITULO_JANELA, MODAL);
-		jDialogPesquisarDespesa.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		jDialogPesquisarDespesa.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		jDialogPesquisarDespesa.setResizable(false);
 		jDialogPesquisarDespesa.setBounds(100,100, LARGURA_JANELA, ALTURA_JANELA);
 		jDialogPesquisarDespesa.setLocationRelativeTo(botaoClicado);

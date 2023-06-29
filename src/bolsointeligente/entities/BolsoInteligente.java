@@ -2,8 +2,8 @@ package bolsointeligente.entities;
 
 import java.io.File;
 
+
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.UIManager;
@@ -26,13 +26,8 @@ public class BolsoInteligente {
 						 USUARIO_BANCO_DADOS = "dba",
 						 SENHA_BANCO_DADOS   = "fpdb@";
 	
-	public static List<Despesa> despesas;
 	
 	public static ConexaoBancoDeDados conexaoBancodeDados;
-	
-	public static List<Float> obterValoresReceitas() throws SQLException{
-		return new DaoReceita(conexaoBancodeDados.getConexaoBanco()).selectValoresReceita();
-	}
 	
 	private static IgBolsoInteligente janelaPrincipalPrograma;
 	
@@ -40,18 +35,9 @@ public class BolsoInteligente {
 	public BolsoInteligente() {
 		iniciarConexaoBancoDeDados();
 		definirLookAndFeel();
-		iniciarListaDespesas();
 		iniciarInterfaceGrafica();
 	}
 
-	private void iniciarListaDespesas() {
-		despesas = new ArrayList<>();
-		try {
-			despesas.addAll(obterDespesas());
-		}catch (SQLException sqlException) {
-			return;
-		}
-	}
 
 	private void iniciarInterfaceGrafica() {
 		janelaPrincipalPrograma = new IgBolsoInteligente();
@@ -80,20 +66,34 @@ public class BolsoInteligente {
 		return new ImportarArquivos().importarArquivos(arquivos);
 	}
 	
-	public static void adicionarDespesas(List<Despesa> despesasAdicionar) {
-		despesas.addAll(despesasAdicionar);
-		janelaPrincipalPrograma.atualizarTabelaDespesa(despesas);
-	}
-	
-	public static String[] obterCategorias() throws SQLException {
-		List<String> categorias = new DaoCategoria(conexaoBancodeDados.getConexaoBanco()).select();
-		return categorias.toArray(new String[categorias.size()]);
+	public static List<String> obterCategorias() throws SQLException {
+		return new DaoCategoria(conexaoBancodeDados.getConexaoBanco()).select();
 	}
 	
 	public static List<Despesa> obterDespesas() throws SQLException{
 		return new DaoDespesa(conexaoBancodeDados.getConexaoBanco()).select();
 	}
-
+	
+	public static List<Float> obterValoresReceitas() throws SQLException{
+		return new DaoReceita(conexaoBancodeDados.getConexaoBanco()).selectValoresReceita();
+	}
+	
+	public static List<Object> obterValoresDespesas() throws SQLException{
+		return new DaoDespesa(conexaoBancodeDados.getConexaoBanco()).selectValoresSituacaoDespesas();
+	}
+	
+	public static List<Despesa> obterDespesasCategoriaMes(String categoria, int numeroMes) throws SQLException {
+		return new DaoDespesa(conexaoBancodeDados.getConexaoBanco()).selectDespesaPorCategoria(categoria, numeroMes);
+	}
+	
+	public static List<Float> obterValoresReceitaMensal(int numeroMes) throws SQLException{
+		return new DaoReceita(conexaoBancodeDados.getConexaoBanco()).selectValoresReceitasMensal(numeroMes);
+	}
+	
+	public static List<Object> obterCategoriasValoresMensal(int numeroMes) throws SQLException{
+		return new DaoDespesa(conexaoBancodeDados.getConexaoBanco()).selectCategoriasValoresMensal(numeroMes);
+	}
+	
 	public ConexaoBancoDeDados getBancoDeDados() {
 		return conexaoBancodeDados;
 	}
@@ -101,5 +101,7 @@ public class BolsoInteligente {
 	public static void main(String[] args) {
 		new BolsoInteligente();
 	}
+
+	
 
 }

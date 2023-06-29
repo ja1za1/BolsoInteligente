@@ -1,5 +1,8 @@
 package bolsointeligente.entities;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public enum Meses {
 	JANEIRO("Janeiro", 1),
 	FEVEREIRO("Fevereiro", 2),
@@ -14,22 +17,49 @@ public enum Meses {
 	NOVEMBRO("Novembro", 11),
 	DEZEMBRO("Dezembro", 12);
 	
-	private String mes;
+	private String nomeMes;
 	private int numeroMes;
+	private static final Map<Integer, String> mapaNumeroMesParaNome = inicializarMapaNumeroParaMes();
+	private static final Map<String, Integer> mapaNomeMesParaNumero = inicializarMapaNomeParaNumero();
+	
 	
 	private Meses(String mes, int numeroMes) {
-		this.mes = mes;
+		this.nomeMes = mes;
 		this.numeroMes = numeroMes;
 	}
 
-	public String getMes() {
-		return mes;
+	private static Map<String, Integer> inicializarMapaNomeParaNumero() {
+		Map<String, Integer> mapMeses = new HashMap<>(12);
+		for(Meses mes : Meses.values()) {
+			mapMeses.put(mes.nomeMes,mes.numeroMes);
+		}
+		return mapMeses;
+	}
+
+	private static Map<Integer, String> inicializarMapaNumeroParaMes() {
+		Map<Integer, String>mapMeses = new HashMap<>(12);
+		
+		for (Meses mes : Meses.values()) {
+            mapMeses.put(mes.numeroMes, mes.nomeMes);
+        }
+		return mapMeses;
+	}
+
+	public String getNomeMes() {
+		return nomeMes;
 	}
 
 	public int getNumeroMes() {
 		return numeroMes;
 	}
 	
+	public static String obterNomeMes(int numeroMes) {
+		return mapaNumeroMesParaNome.get(numeroMes);
+	}
+	
+	public static int obterNumeroMes(String nomeMes) {
+		return mapaNomeMesParaNumero.get(nomeMes);
+	}
 	
 
 }

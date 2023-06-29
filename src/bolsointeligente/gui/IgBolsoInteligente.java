@@ -11,7 +11,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Font;
 
 import javax.swing.border.TitledBorder;
@@ -20,13 +19,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.labels.PieSectionLabelGenerator;
-import org.jfree.chart.labels.PieToolTipGenerator;
-import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
-import org.jfree.chart.labels.StandardPieToolTipGenerator;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.PieLabelLinkStyle;
-import org.jfree.chart.plot.PiePlot3D;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
@@ -37,40 +29,23 @@ import bolsointeligente.entities.GraficoBarras;
 import bolsointeligente.entities.GraficoPizza3D;
 import bolsointeligente.entities.Meses;
 import bolsointeligente.entities.TabelaDespesas;
-import bolsointeligente.utils.DataHora;
 import mos.es.InputOutput;
 
 import java.awt.event.KeyEvent;
 import java.io.File;
-import java.io.IOException;
-import java.sql.Date;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Formatter;
 import java.util.List;
 
-import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JTable;
 import net.miginfocom.swing.MigLayout;
 import java.awt.FlowLayout;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 import java.awt.Dimension;
 
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
-import javax.swing.ListSelectionModel;
 import javax.swing.border.LineBorder;
 
 
@@ -112,30 +87,35 @@ public class IgBolsoInteligente{
 				   lblValorInvestimentos,
 				   lblValorTotalPagar;
 				   
-	private JComboBox<String> cmbBoxCategoriaOrcamento;
+	private JComboBox<String> cmbBoxCategoriaOrcamento,
+						      cmbBoxMesOrcamento;
 
-	/**
-	 * Create the application.
-	 */
-	
-	
 	
 	public IgBolsoInteligente() {
 		definirPropriedadesJanelaPrincipal();
 		gerarPainelCabecalho();
 		gerarPainelOrcamento();
 		gerarPainelRodape();
-		definirValoresJLabel();
+		definirValoresJLabelValores();
 		definirListeners();
+		atualizarTabelaDespesa(obterCategoriaSelecionada(), obterNumeroMesSelecionado());
 		exibirJanela();
 	}
 	
-	private void definirValoresJLabel() {
+	private String obterCategoriaSelecionada() {
+		return (String)cmbBoxCategoriaOrcamento.getSelectedItem();
+	}
+	
+	private String obterNomeMesSelecionado() {
+		return (String)cmbBoxMesOrcamento.getSelectedItem();
+	}
+	
+	private int obterNumeroMesSelecionado() {
+		return Meses.obterNumeroMes(obterNomeMesSelecionado());
+	}
+	
+	private void definirValoresJLabelValores() {
 
-		DefaultTableModel modeloTabelaDespesa = tabelaDespesa.getModeloTabelaDespesa();
-		int numeroLinhas = modeloTabelaDespesa.getRowCount();
-		int numeroColunas = modeloTabelaDespesa.getColumnCount();
-		
 		float valorTotalPago,
 			  valorTotalPagar,
 		      valorDespesas,
@@ -144,38 +124,37 @@ public class IgBolsoInteligente{
 		
 		valorReceitas = valorSaldo = valorTotalPago = valorTotalPagar = valorDespesas = 0f;
 		List<Float> valoresReceitas;
+		List<Object> valoresSituacaoDespesas;
 		try {
 			valoresReceitas = BolsoInteligente.obterValoresReceitas();
-		} catch (SQLException e) {
+		} catch (SQLException sqlException) {
 			valoresReceitas = new ArrayList<>();
 		}
+		
+		try {
+			valoresSituacaoDespesas = BolsoInteligente.obterValoresDespesas();
+		} catch (SQLException sqlException) {
+			valoresSituacaoDespesas = new ArrayList<>();
+		}
+		
 		
 		for(Float valorReceita : valoresReceitas) {
 			valorReceitas += valorReceita;
 		}
 		
-		for(int linha = 0; linha < numeroLinhas; linha++) {
-			for(int coluna = 0; coluna < numeroColunas; coluna++) {
-				if(coluna == 4) {
-					Object valorDespesa = modeloTabelaDespesa.getValueAt(linha, coluna);
-					if(valorDespesa instanceof Float) {
-						valorDespesas += (Float)valorDespesa;
-					}
-					Object situacao = modeloTabelaDespesa.getValueAt(linha, coluna+1);
-					if(situacao instanceof Boolean) {
-						boolean pago = (Boolean)situacao;
-						if(pago) {
-							valorTotalPago += (Float)valorDespesa;
-						}
-						else {
-							valorTotalPagar += (Float)valorDespesa;
-						}
-					}
-					
-					
+		for(int i = 0; i < valoresSituacaoDespesas.size(); i++) {
+			Object valorOuSituacao = valoresSituacaoDespesas.get(i); 
+			if( valorOuSituacao instanceof Float) {
+				valorDespesas += (Float)valorOuSituacao;
+			}else {
+				if((Boolean)valorOuSituacao) {
+					valorTotalPago += (Float)valoresSituacaoDespesas.get(i-1);
+				}else {
+					valorTotalPagar += (Float)valoresSituacaoDespesas.get(i-1);
 				}
 			}
 		}
+		
 		valorSaldo = valorReceitas - valorDespesas;
 		
 		lblValorDespesas.setText(String.format("R$ %,.2f", valorDespesas));
@@ -208,12 +187,25 @@ public class IgBolsoInteligente{
 	
 	private void definirListeners() {
 		btnPesquisarDespesa.addActionListener((e) -> new IgPesquisarDespesa(frmBolsoInteligente,btnPesquisarDespesa));
-		btnImportar.addActionListener((e) -> importarArquivos());
+		btnInvestimentos.addActionListener((e) -> new IgInvestimentos());
+		btnImportar.addActionListener((e) -> operacoesImportacao());
 		btnGraficoBarra.addActionListener((e) -> exibirGrafico(graficoBarras.getGraficoBarras()));
 		btnGraficoPizza.addActionListener((e) -> exibirGrafico(graficoPizza3D.getGraficoPizza3D()));
+		cmbBoxCategoriaOrcamento.addActionListener((e) -> atualizarDadosDeAcordoCategoriaMes());
+		cmbBoxMesOrcamento.addActionListener((e) -> atualizarDadosDeAcordoCategoriaMes());
 	}
 
 	
+	private void atualizarDadosDeAcordoCategoriaMes() {
+		exibirDadosTabelaDeAcordoCategoriaMes();
+		inserirDadosGraficoBarra((DefaultCategoryDataset)graficoBarras.getPlotGraficoBarras().getDataset());
+		inserirDadosGraficoPizza3D((DefaultPieDataset)graficoPizza3D.getPlotGraficoPizza3D().getDataset());
+	}
+
+	private void exibirDadosTabelaDeAcordoCategoriaMes() {
+		tabelaDespesa.atualizarDadosTabela(obterCategoriaSelecionada(), obterNumeroMesSelecionado());
+	}
+
 	private void gerarPainelCabecalho() {
 		pnlCabecalho = new JPanel();
 		pnlCabecalho.setBackground(new Color(255, 255, 255));
@@ -276,6 +268,7 @@ public class IgBolsoInteligente{
 		pnlCabecalho.add(lblValorInvestimentos, "cell 6 1,alignx left");
 		
 		frmBolsoInteligente.getContentPane().add(pnlCabecalho);
+			
 	}
 	
 	private void gerarPainelOrcamento() {
@@ -312,13 +305,14 @@ public class IgBolsoInteligente{
 		lblMesOrcamento.setBounds(20, 29, 31, 16);
 		pnlOrcamento.add(lblMesOrcamento);
 		
-		JComboBox<String> cmbBoxMesOrcamento = new JComboBox<>();
+		cmbBoxMesOrcamento = new JComboBox<>();
 		cmbBoxMesOrcamento.setFont(new Font("Arial", Font.PLAIN, 12));
 		lblMesOrcamento.setLabelFor(cmbBoxMesOrcamento);
 		DefaultComboBoxModel<String> modeloComboBoxMeses = new DefaultComboBoxModel<>();
 		for(Meses mes : Meses.values()) {
-			modeloComboBoxMeses.addElement(mes.getMes());
+			modeloComboBoxMeses.addElement(mes.getNomeMes());
 		}
+		modeloComboBoxMeses.setSelectedItem(Meses.obterNomeMes(LocalDate.now().getMonthValue()));
 		cmbBoxMesOrcamento.setModel(modeloComboBoxMeses);
 		cmbBoxMesOrcamento.setBounds(52, 24, 90, 26);
 		pnlOrcamento.add(cmbBoxMesOrcamento);
@@ -332,7 +326,9 @@ public class IgBolsoInteligente{
 		cmbBoxCategoriaOrcamento = new JComboBox<>();
 		lblCategoriaOrcamento.setLabelFor(cmbBoxCategoriaOrcamento);
 		
-		DefaultComboBoxModel<String> modeloComboBoxCategorias = new DefaultComboBoxModel<>(obterCategoriasCadastradas());
+		DefaultComboBoxModel<String> modeloComboBoxCategorias = new DefaultComboBoxModel<>();
+		modeloComboBoxCategorias.addAll(obterCategoriasCadastradas());
+		modeloComboBoxCategorias.setSelectedItem("Todas");
 		cmbBoxCategoriaOrcamento.setModel(modeloComboBoxCategorias);
 		cmbBoxCategoriaOrcamento.setFont(new Font("Arial", Font.PLAIN, 12));
 		cmbBoxCategoriaOrcamento.setBounds(218, 24, 119, 26);
@@ -344,17 +340,18 @@ public class IgBolsoInteligente{
 		scrllPaneTabelaOrcamento.setBounds(20, 62, 643, 244);
 		pnlOrcamento.add(scrllPaneTabelaOrcamento);
 		
-		DefaultPieDataset dadosGraficoPizza3D = gerarDadosGraficoPizza3D();
+		DefaultPieDataset dadosGraficoPizza3D = new DefaultPieDataset();
+				
+		inserirDadosGraficoPizza3D(dadosGraficoPizza3D);
 		
 		graficoPizza3D = new GraficoPizza3D(gerarGraficoPizza3D(dadosGraficoPizza3D,null,true,true,false));
 		
-		
-		DefaultCategoryDataset dadosGraficoBarras = gerarDadosGraficoBarra();
+		DefaultCategoryDataset dadosGraficoBarras = new DefaultCategoryDataset();
+				
+		inserirDadosGraficoBarra(dadosGraficoBarras);
 		
 		graficoBarras = new GraficoBarras(gerarGraficoBarra(null, null, null, dadosGraficoBarras, PlotOrientation.VERTICAL, true, true, false));
 		
-        
-        
 		chrtPnlGrafico = new ChartPanel(graficoBarras.getGraficoBarras());
 		chrtPnlGrafico.setMouseWheelEnabled(true);
 		chrtPnlGrafico.setBorder(null);
@@ -383,28 +380,93 @@ public class IgBolsoInteligente{
 		btnInvestimentos.setFont(new Font("Arial", Font.PLAIN, 12));
 	}
 	
-    private DefaultPieDataset gerarDadosGraficoPizza3D() {
-		// // Criar um conjunto de dados para o gráfico de pizza
-        DefaultPieDataset dadosGrafico = new DefaultPieDataset();
-//        dadosGrafico.setValue("Maçã", 20.7);
-//        dadosGrafico.setValue("Laranja", 30.0);
-//        dadosGrafico.setValue("Banana", 50.0);
-//        dadosGrafico.setValue("Pera", 30.0);
-		return dadosGrafico;
+    private void inserirDadosGraficoPizza3D(DefaultPieDataset dadosGraficoPizza) {
+    	dadosGraficoPizza.clear();
+    	
+    	List<Object> categoriaValoresMensal;
+    	try {
+			categoriaValoresMensal = BolsoInteligente.obterCategoriasValoresMensal(obterNumeroMesSelecionado());
+		} catch (SQLException e) {
+			categoriaValoresMensal = new ArrayList<>();
+		}
+    	List<Float> receitasMensais;
+    	try {
+			receitasMensais = BolsoInteligente.obterValoresReceitaMensal(obterNumeroMesSelecionado());
+		} catch (SQLException sqlException) {
+			receitasMensais = new ArrayList<>();
+		}
+    	
+    	float valorTotalGanhoMes = 0f;
+    	
+    	for(Float receita : receitasMensais) {
+    		valorTotalGanhoMes += receita;
+    	}
+    	
+    	for(int i = 0; i < categoriaValoresMensal.size(); i++) {
+    		Object categoriaOuValor = categoriaValoresMensal.get(i);
+    		if(categoriaOuValor instanceof String) {
+    			continue;
+    		}
+    		else if(categoriaOuValor instanceof Float){
+    			float porcentagemGastaMensalCategoria;
+    			if(valorTotalGanhoMes == 0) {
+    				porcentagemGastaMensalCategoria = 100f;
+    			}
+    			else {
+    				porcentagemGastaMensalCategoria = (float)categoriaOuValor/valorTotalGanhoMes * 100;
+    			}
+    			
+    			categoriaValoresMensal.set(i, porcentagemGastaMensalCategoria);
+    		}
+    	}
+    	
+    	for(int i = 0; i < categoriaValoresMensal.size(); i+=2) {
+    		dadosGraficoPizza.setValue((String)categoriaValoresMensal.get(i), (Float)categoriaValoresMensal.get(i+1));
+    	}
+    	
 	}
     
-    private DefaultCategoryDataset gerarDadosGraficoBarra() {
-    	DefaultCategoryDataset dadosGraficoBarra = new DefaultCategoryDataset();
-//        dadosGraficoBarra.addValue(0.75, "Produto A", "Janeiro");
-//        dadosGraficoBarra.addValue(0.12, "Produto B", "Janeiro");
-//        dadosGraficoBarra.addValue(0.3, "Produto C", "Janeiro");
-//        dadosGraficoBarra.addValue(0.8, "Produto A", "Fevereiro");
-//        dadosGraficoBarra.addValue(0.10, "Produto B", "Fevereiro");
-//        dadosGraficoBarra.addValue(0.11, "Produto C", "Fevereiro");
-//        dadosGraficoBarra.addValue(0.13, "Produto A", "Março");
-//        dadosGraficoBarra.addValue(0.7, "Produto B", "Março");
-//        dadosGraficoBarra.addValue(0.14, "Produto C", "Março");
-        return dadosGraficoBarra;
+    private void inserirDadosGraficoBarra(DefaultCategoryDataset dadosGraficoBarra) {
+    	dadosGraficoBarra.clear();
+    	List<Object> categoriaValoresMensal;
+    	try {
+			categoriaValoresMensal = BolsoInteligente.obterCategoriasValoresMensal(obterNumeroMesSelecionado());
+		} catch (SQLException e) {
+			categoriaValoresMensal = new ArrayList<>();
+		}
+    	List<Float> receitasMensais;
+    	try {
+			receitasMensais = BolsoInteligente.obterValoresReceitaMensal(obterNumeroMesSelecionado());
+		} catch (SQLException sqlException) {
+			receitasMensais = new ArrayList<>();
+		}
+    	
+    	float valorTotalGanhoMes = 0f;
+    	
+    	for(Float receita : receitasMensais) {
+    		valorTotalGanhoMes += receita;
+    	}
+    	
+    	for(int i = 0; i < categoriaValoresMensal.size(); i++) {
+    		Object categoriaOuValor = categoriaValoresMensal.get(i);
+    		if(categoriaOuValor instanceof String) {
+    			continue;
+    		}
+    		else if(categoriaOuValor instanceof Float){
+    			float porcentagemGastaMensalCategoria;
+    			if(valorTotalGanhoMes == 0) {
+    				porcentagemGastaMensalCategoria = 1f;
+    			}
+    			else {
+    				porcentagemGastaMensalCategoria = (float)categoriaOuValor/valorTotalGanhoMes;
+    			}
+    			categoriaValoresMensal.set(i, porcentagemGastaMensalCategoria);
+    		}
+    	}
+    	
+    	for(int i = 0; i < categoriaValoresMensal.size(); i+=2) {
+    		dadosGraficoBarra.setValue((Float)categoriaValoresMensal.get(i+1), (String)categoriaValoresMensal.get(i), "");
+    	}
     }
 	
 	private JFreeChart gerarGraficoPizza3D(DefaultPieDataset dadosGrafico, String tituloGrafico, boolean exibirLegenda, boolean exibirToolTips, boolean exibirUrls ) {
@@ -446,10 +508,9 @@ public class IgBolsoInteligente{
 		frmBolsoInteligente.getContentPane().setLayout(null);
 	}
 
-	private void verificarCategoriaNova() {
-		final String[] categoriasCadastradas = obterCategoriasCadastradas();
+	private void atualizarCategoriasExibidas() {
+		final List<String> categoriasCadastradas = obterCategoriasCadastradas();
 		List<String> categoriasSendoExibidas = obterCategoriasSendoExibidas();
-		
 		
 		for(String categoria : categoriasCadastradas) {
 			if(!categoriasSendoExibidas.stream().anyMatch(x -> x.equalsIgnoreCase(categoria))) {
@@ -491,13 +552,14 @@ public class IgBolsoInteligente{
 		
 	}
 	
-	private String[] obterCategoriasCadastradas() {
-		String[] categoriasCadastradas = new String[] {};
+	private List<String> obterCategoriasCadastradas() {
+		List<String> categoriasCadastradas;
 		try {
 			categoriasCadastradas = BolsoInteligente.obterCategorias();
 		} catch (SQLException sqlException) {
-			InputOutput.showError("Erro ao obter categorias cadastradas do banco.", TITULO_JANELA);
+			categoriasCadastradas = new ArrayList<>();
 		}
+		categoriasCadastradas.add(0, "Todas");
 		return categoriasCadastradas;
 	}
 	
@@ -523,24 +585,19 @@ public class IgBolsoInteligente{
 		
 	}
 	
-	public void atualizarTabelaDespesa(List<Despesa>despesas) {
-		Object[] valores = null;
-		int linha = 0;
-		for(Despesa despesa : despesas) {
-			valores = new Object[] {
-				despesa.getData(),
-				despesa.getDiaPagamento().getDayOfMonth(),
-				despesa.getFormaPagamento(),
-				despesa.getDescricao(),
-				despesa.getValor(),
-				despesa.getSituacao()
-			};
-		}
-		tabelaDespesa.atualizarTabela(valores, linha);
-		
-		linha++;
+	public void atualizarTabelaDespesa(String categoria, int numeroMes) {
+		tabelaDespesa.atualizarDadosTabela(categoria, numeroMes);
 	}
 
+	private void operacoesImportacao() {
+		importarArquivos();
+		tabelaDespesa.atualizarDadosTabela(obterCategoriaSelecionada(), obterNumeroMesSelecionado());
+		definirValoresJLabelValores();
+		atualizarCategoriasExibidas();
+		inserirDadosGraficoBarra((DefaultCategoryDataset)graficoBarras.getPlotGraficoBarras().getDataset());
+		inserirDadosGraficoPizza3D((DefaultPieDataset)graficoPizza3D.getPlotGraficoPizza3D().getDataset());
+	}
+	
 	private void importarArquivos() {
 		final String TITULO_IMPORTACAO = "Importação";
 		if(flChserImportar == null) {
@@ -550,8 +607,6 @@ public class IgBolsoInteligente{
 		
 		if(opcao == JFileChooser.APPROVE_OPTION) {
 			InputOutput.showInfo(BolsoInteligente.importarArquivos(flChserImportar.getSelectedFiles()), TITULO_IMPORTACAO); ;
-			definirValoresJLabel();
-			verificarCategoriaNova();
 		}
 	}
 }
