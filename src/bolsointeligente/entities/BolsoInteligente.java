@@ -12,6 +12,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 import bolsointeligente.bd.ConexaoBancoDeDados;
 import bolsointeligente.dao.DaoCategoria;
 import bolsointeligente.dao.DaoDespesa;
+import bolsointeligente.dao.DaoInvestimento;
 import bolsointeligente.dao.DaoReceita;
 import bolsointeligente.entities.importfiles.ImportarArquivos;
 import bolsointeligente.gui.IgBolsoInteligente;
@@ -29,7 +30,6 @@ public class BolsoInteligente {
 	
 	public static ConexaoBancoDeDados conexaoBancodeDados;
 	
-	private static IgBolsoInteligente janelaPrincipalPrograma;
 	
 	
 	public BolsoInteligente() {
@@ -40,7 +40,7 @@ public class BolsoInteligente {
 
 
 	private void iniciarInterfaceGrafica() {
-		janelaPrincipalPrograma = new IgBolsoInteligente();
+		new IgBolsoInteligente();
 	}
 
 	private void iniciarConexaoBancoDeDados(){
@@ -93,6 +93,25 @@ public class BolsoInteligente {
 	public static List<Object> obterCategoriasValoresMensal(int numeroMes) throws SQLException{
 		return new DaoDespesa(conexaoBancodeDados.getConexaoBanco()).selectCategoriasValoresMensal(numeroMes);
 	}
+	
+	public static Float obterValorTotalInvestido() throws SQLException{
+		return new DaoInvestimento(conexaoBancodeDados.getConexaoBanco()).selectValorTotalInvestido();
+	}
+	
+	public static List<Investimento> obterInvestimentos() throws SQLException{
+		return new DaoInvestimento(conexaoBancodeDados.getConexaoBanco()).select();
+	}
+	
+	public static Float obterValorTotalAcumulado() throws SQLException{
+		return new DaoInvestimento(conexaoBancodeDados.getConexaoBanco()).selectValorTotalAcumulado();
+	}
+	
+	public static boolean alterarDespesa(Despesa despesaAlterar) throws SQLException {
+		new DaoDespesa(conexaoBancodeDados.getConexaoBanco()).update(despesaAlterar);
+		return true;
+	}
+	
+	
 	
 	public ConexaoBancoDeDados getBancoDeDados() {
 		return conexaoBancodeDados;

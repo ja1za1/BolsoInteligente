@@ -1,7 +1,6 @@
-package bolsointeligente.entities;
+package bolsointeligente.entities.graphics;
 
 import java.awt.Color;
-
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
@@ -43,10 +42,9 @@ public class GraficoBarras {
 	}
 	
 	private void gerarGeradorLegenda() {
-		BarRenderer renderizadorBarra = new BarRenderer();
+		BarRenderer renderizadorBarra = (BarRenderer)plotGraficoBarras.getRenderer();
 		renderizadorBarra.setDefaultItemLabelGenerator(new CategoryItemLabelGenerator() {
 			
-			private static final NumberFormat format = NumberFormat.getNumberInstance();
 			@Override
 			public String generateRowLabel(CategoryDataset dataset, int row) {
 				return null;
@@ -55,7 +53,7 @@ public class GraficoBarras {
 			@Override
 			public String generateLabel(CategoryDataset dataset, int row, int column) {
 				Number valor = dataset.getValue(row, column);
-	            return format.format(valor);
+	            return String.format("%,.2f", valor);
 			}
 			
 			@Override
@@ -64,6 +62,9 @@ public class GraficoBarras {
 			}
 		});
 		renderizadorBarra.setDefaultItemLabelsVisible(true);
+		renderizadorBarra.setDrawBarOutline(true);
+		renderizadorBarra.setItemLabelAnchorOffset(0.5d);
+		renderizadorBarra.setShadowVisible(true);
 		plotGraficoBarras.setRenderer(renderizadorBarra);
 		plotGraficoBarras.getRenderer().setDefaultItemLabelGenerator(TEXTO_LEGENDA);
 	}

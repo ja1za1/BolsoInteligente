@@ -13,6 +13,7 @@ public class Despesa {
 	private LocalDate data;
 	private Float valor;
 	private boolean situacao;
+	private long codigo;
 	
 	public Despesa () {}
 	
@@ -26,9 +27,29 @@ public class Despesa {
 		this.valor = valor;
 		this.situacao = pago;
 	}
+	
+	public Despesa(String descricao, String categoria, String formaPagamento, MonthDay diaPagamento, LocalDate data,
+			Float valor, boolean situacao, long codigo) {
+		this.descricao = descricao;
+		this.categoria = categoria;
+		this.formaPagamento = formaPagamento;
+		this.diaPagamento = diaPagamento;
+		this.data = data;
+		this.valor = valor;
+		this.situacao = situacao;
+		this.codigo = codigo;
+	}
 
 	public String getDescricao() {
 		return descricao;
+	}
+	
+	public long getCodigo() {
+		return codigo;
+	}
+
+	public void setCodigo(long codigo) {
+		this.codigo = codigo;
 	}
 
 	public void setDescricao(String descricao) {

@@ -437,8 +437,18 @@ public class ImportarArquivos implements ImportacaoArquivo {
 					continue;
 				}
 				LocalDate vencimento = DataHora.obterLocalDateIsoDateStringDiaMesAno(vencimentoString);
-				
 				Investimento investimento = new Investimento(objetivo, estrategia, nomeInvestimento, valorInvestido, posicao, rendimentoBruto, rentabilidade, vencimento);
+				if(!investimento.verificarRendimentoBrutoValido()) {
+					final String RENDIMENTO_BRUTO_ERRADO = String.format("\n'%s': O rendimento bruto na linha %d coluna %d estava errado.\nValor foi alterado para rendimento bruto correto.", nomeArquivo,linhaCorrente,COLUNA_RENDIMENTO_BRUTO+1);
+					problemasImportacaoArquivo.append(RENDIMENTO_BRUTO_ERRADO);
+					investimento.calcularValorRendimentoBruto();
+				}
+				if(!investimento.verificarRentabilidadeValida()) {
+					final String RENTABILIDADE_ERRADA = String.format("\n'%s': A rentabilidade na linha %d coluna %d estava errada.\nValor foi alterado para rentabilidade correta.", nomeArquivo,linhaCorrente,COLUNA_RENTABILIDADE+1);
+					problemasImportacaoArquivo.append(RENTABILIDADE_ERRADA);
+					investimento.calcularValorRentabilidade();
+				}
+				
 				Dao.inserirDadosBancoDeDados(new DaoInvestimento(BolsoInteligente.conexaoBancodeDados.getConexaoBanco()), investimento);
 				linhasImportadasSucesso++;
 				
@@ -455,6 +465,8 @@ public class ImportarArquivos implements ImportacaoArquivo {
 		
 		return linhasImportadasSucesso;
 	}
+
+
 	
 
 }

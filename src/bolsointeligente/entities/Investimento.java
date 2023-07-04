@@ -3,8 +3,6 @@ package bolsointeligente.entities;
 import java.time.LocalDate;
 
 public class Investimento {
-// Objetivo;Estratégia;Nome;Valor Investido;Posição; Rendimento Bruto;Rentabilidade;Vencimento
-// Viagem;Pós-fixado; CDB Original Jan/2026; 2.000; 2.789,45; 789,45; 39,47% ; 14/01/2026
 	
 	private String objetivo,
 				   estrategia,
@@ -15,7 +13,11 @@ public class Investimento {
 				  rendimentoBruto,
 				  rentabilidade;
 	
+	private long codigo;
+	
 	private LocalDate vencimento;
+	
+	public Investimento() {}
 
 	public Investimento(String objetivo, String estrategia, String nome, float valorInvestido, float posicao,
 			float rendimentoBruto, float rentabilidade, LocalDate vencimento) {
@@ -92,6 +94,31 @@ public class Investimento {
 	public void setVencimento(LocalDate vencimento) {
 		this.vencimento = vencimento;
 	}
+	
+	public long getCodigo() {
+		return codigo;
+	}
+
+	public void setCodigo(long codigo) {
+		this.codigo = codigo;
+	}
+
+	public boolean verificarRentabilidadeValida() {
+		return valorInvestido / rendimentoBruto == rentabilidade;
+	}
+
+	public boolean verificarRendimentoBrutoValido() {
+		return posicao - valorInvestido == rendimentoBruto;
+	}
+	
+	public void calcularValorRendimentoBruto() {
+		setRendimentoBruto(posicao - valorInvestido);
+	}
+	
+	public void calcularValorRentabilidade() {
+		setRentabilidade(rendimentoBruto/valorInvestido*100);
+	}
+	
 	
 	
 	

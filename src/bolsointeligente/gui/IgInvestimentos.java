@@ -1,9 +1,9 @@
 package bolsointeligente.gui;
 
 import javax.swing.JDialog;
+
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -14,6 +14,9 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.JLabel;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
+
+import bolsointeligente.entities.tables.TabelaInvestimentos;
+
 import javax.swing.JButton;
 import java.awt.FlowLayout;
 import java.awt.event.KeyEvent;
@@ -25,16 +28,24 @@ public class IgInvestimentos{
 				    btnGraficoColunas,
 				    btnFechar;
 
+	private TabelaInvestimentos tabelaInvestimentos;
 	/**
 	 * Create the dialog.
 	 */
 	public IgInvestimentos() {
-		janelaInvestimentos = new JDialog();
-		janelaInvestimentos.setTitle("Bolso Inteligente - Investimentos");
-		janelaInvestimentos.setModalityType(ModalityType.APPLICATION_MODAL);
-		janelaInvestimentos.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE );
-		janelaInvestimentos.setBounds(100, 100, 1004, 442);
-		
+		definirPropriedadesJanela();
+		criarPainelCabecalho();
+		criarPainelInvestimentos();
+		criarPainelRodape();
+		adicionarListeners();
+		exibirJanela();
+	}
+
+	private void exibirJanela() {
+		janelaInvestimentos.setVisible(true);
+	}
+
+	private void criarPainelCabecalho() {
 		JPanel pnlCabecalho = new JPanel();
 		pnlCabecalho.setBackground(new Color(255, 255, 255));
 		janelaInvestimentos.getContentPane().add(pnlCabecalho, BorderLayout.NORTH);
@@ -66,16 +77,27 @@ public class IgInvestimentos{
 		JLabel lblValorRendimentoBruto = new JLabel("R$ 4.350,79");
 		lblValorRendimentoBruto.setFont(new Font("Arial Black", Font.PLAIN, 18));
 		pnlCabecalho.add(lblValorRendimentoBruto, "cell 2 1");
-		
+	}
+
+	
+	
+	private void criarPainelInvestimentos() {
 		JPanel pnlInvestimentos = new JPanel();
 		pnlInvestimentos.setBackground(new Color(255, 255, 255));
 		pnlInvestimentos.setBorder(new TitledBorder(new LineBorder(new Color(0, 0, 0)), "Investimentos", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		janelaInvestimentos.getContentPane().add(pnlInvestimentos, BorderLayout.CENTER);
 		pnlInvestimentos.setLayout(new BorderLayout(0, 0));
 		
-		JScrollPane scrollPane = new JScrollPane(new JTable());
+		tabelaInvestimentos = new TabelaInvestimentos();
+		tabelaInvestimentos.atualizarTabela();
+		JScrollPane scrollPane = new JScrollPane(tabelaInvestimentos.getTabelaInvestimentos());
 		pnlInvestimentos.add(scrollPane, BorderLayout.CENTER);
 		
+		
+	}
+	
+	
+	private void criarPainelRodape() {
 		JPanel pnlRodape = new JPanel();
 		pnlRodape.setBackground(new Color(255, 255, 255));
 		FlowLayout flowLayout = (FlowLayout) pnlRodape.getLayout();
@@ -96,10 +118,17 @@ public class IgInvestimentos{
 		btnFechar.setMnemonic(KeyEvent.VK_F);
 		btnFechar.setFont(new Font("Arial", Font.PLAIN, 12));
 		pnlRodape.add(btnFechar);
-		adicionarListeners();
 		
-		janelaInvestimentos.setVisible(true);
-		
+	}
+	
+	
+	
+	private void definirPropriedadesJanela() {
+		janelaInvestimentos = new JDialog();
+		janelaInvestimentos.setTitle("Bolso Inteligente - Investimentos");
+		janelaInvestimentos.setModalityType(ModalityType.APPLICATION_MODAL);
+		janelaInvestimentos.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE );
+		janelaInvestimentos.setBounds(100, 100, 1004, 442);
 	}
 
 	private void adicionarListeners() {

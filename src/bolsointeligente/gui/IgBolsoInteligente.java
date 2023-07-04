@@ -24,11 +24,10 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 
 import bolsointeligente.entities.BolsoInteligente;
-import bolsointeligente.entities.Despesa;
-import bolsointeligente.entities.GraficoBarras;
-import bolsointeligente.entities.GraficoPizza3D;
 import bolsointeligente.entities.Meses;
-import bolsointeligente.entities.TabelaDespesas;
+import bolsointeligente.entities.graphics.GraficoBarras;
+import bolsointeligente.entities.graphics.GraficoPizza3D;
+import bolsointeligente.entities.tables.TabelaDespesas;
 import mos.es.InputOutput;
 
 import java.awt.event.KeyEvent;
@@ -47,6 +46,7 @@ import java.awt.FlowLayout;
 import java.awt.Dimension;
 
 import javax.swing.border.LineBorder;
+import javax.swing.SwingConstants;
 
 
 
@@ -85,7 +85,8 @@ public class IgBolsoInteligente{
 				   lblValorSaldo,
 				   lblValorTotalPago,
 				   lblValorInvestimentos,
-				   lblValorTotalPagar;
+				   lblValorTotalPagar,
+				   lblNaoHaDadosGrafico;
 				   
 	private JComboBox<String> cmbBoxCategoriaOrcamento,
 						      cmbBoxMesOrcamento;
@@ -96,13 +97,13 @@ public class IgBolsoInteligente{
 		gerarPainelCabecalho();
 		gerarPainelOrcamento();
 		gerarPainelRodape();
-		definirValoresJLabelValores();
+		balancoMensal();
 		definirListeners();
 		atualizarTabelaDespesa(obterCategoriaSelecionada(), obterNumeroMesSelecionado());
 		exibirJanela();
 	}
 	
-	private String obterCategoriaSelecionada() {
+	public String obterCategoriaSelecionada() {
 		return (String)cmbBoxCategoriaOrcamento.getSelectedItem();
 	}
 	
@@ -110,17 +111,18 @@ public class IgBolsoInteligente{
 		return (String)cmbBoxMesOrcamento.getSelectedItem();
 	}
 	
-	private int obterNumeroMesSelecionado() {
+	public int obterNumeroMesSelecionado() {
 		return Meses.obterNumeroMes(obterNomeMesSelecionado());
 	}
 	
-	private void definirValoresJLabelValores() {
+	private void balancoMensal() {
 
 		float valorTotalPago,
 			  valorTotalPagar,
 		      valorDespesas,
 		      valorReceitas,
-		      valorSaldo;
+		      valorSaldo,
+		      valorInvestimentos;
 		
 		valorReceitas = valorSaldo = valorTotalPago = valorTotalPagar = valorDespesas = 0f;
 		List<Float> valoresReceitas;
@@ -156,7 +158,13 @@ public class IgBolsoInteligente{
 		}
 		
 		valorSaldo = valorReceitas - valorDespesas;
+		try {
+			valorInvestimentos = BolsoInteligente.obterValorTotalAcumulado();
+		} catch (SQLException e) {
+			valorInvestimentos = 0;
+		}
 		
+		lblValorInvestimentos.setText(String.format("R$ %,.2f", valorInvestimentos));
 		lblValorDespesas.setText(String.format("R$ %,.2f", valorDespesas));
 		lblValorTotalPago.setText(String.format("R$ %,.2f", valorTotalPago));
 		lblValorTotalPagar.setText(String.format("R$ %,.2f", valorTotalPagar));
@@ -186,7 +194,7 @@ public class IgBolsoInteligente{
 
 	
 	private void definirListeners() {
-		btnPesquisarDespesa.addActionListener((e) -> new IgPesquisarDespesa(frmBolsoInteligente,btnPesquisarDespesa));
+		btnPesquisarDespesa.addActionListener((e) -> new IgPesquisarDespesa(frmBolsoInteligente,this.frmBolsoInteligente, this.tabelaDespesa));
 		btnInvestimentos.addActionListener((e) -> new IgInvestimentos());
 		btnImportar.addActionListener((e) -> operacoesImportacao());
 		btnGraficoBarra.addActionListener((e) -> exibirGrafico(graficoBarras.getGraficoBarras()));
@@ -196,10 +204,11 @@ public class IgBolsoInteligente{
 	}
 
 	
-	private void atualizarDadosDeAcordoCategoriaMes() {
+	public void atualizarDadosDeAcordoCategoriaMes() {
 		exibirDadosTabelaDeAcordoCategoriaMes();
 		inserirDadosGraficoBarra((DefaultCategoryDataset)graficoBarras.getPlotGraficoBarras().getDataset());
 		inserirDadosGraficoPizza3D((DefaultPieDataset)graficoPizza3D.getPlotGraficoPizza3D().getDataset());
+		balancoMensal();
 	}
 
 	private void exibirDadosTabelaDeAcordoCategoriaMes() {
@@ -334,8 +343,15 @@ public class IgBolsoInteligente{
 		cmbBoxCategoriaOrcamento.setBounds(218, 24, 119, 26);
 		pnlOrcamento.add(cmbBoxCategoriaOrcamento);
 		
+		lblNaoHaDadosGrafico = new JLabel();
+		lblNaoHaDadosGrafico.setForeground(new Color(255, 0, 0));
+		lblNaoHaDadosGrafico.setHorizontalAlignment(SwingConstants.CENTER);
+		lblNaoHaDadosGrafico.setFont(new Font("Arial Black", Font.PLAIN, 14));
+		lblNaoHaDadosGrafico.setBounds(78, 135, 402, 35);
 		
-        tabelaDespesa = new TabelaDespesas();
+		
+		
+        tabelaDespesa = new TabelaDespesas(this);
 		JScrollPane scrllPaneTabelaOrcamento = new JScrollPane(tabelaDespesa.getTabelaDespesas());
 		scrllPaneTabelaOrcamento.setBounds(20, 62, 643, 244);
 		pnlOrcamento.add(scrllPaneTabelaOrcamento);
@@ -353,11 +369,16 @@ public class IgBolsoInteligente{
 		graficoBarras = new GraficoBarras(gerarGraficoBarra(null, null, null, dadosGraficoBarras, PlotOrientation.VERTICAL, true, true, false));
 		
 		chrtPnlGrafico = new ChartPanel(graficoBarras.getGraficoBarras());
+		
+		
 		chrtPnlGrafico.setMouseWheelEnabled(true);
 		chrtPnlGrafico.setBorder(null);
-        chrtPnlGrafico.setBounds(675, 29, 505, 298);
+        chrtPnlGrafico.setBounds(675, 24, 505, 322);
         chrtPnlGrafico.setLayout(null);
 		pnlOrcamento.add(chrtPnlGrafico);
+		chrtPnlGrafico.add(lblNaoHaDadosGrafico);
+		
+		
 	}
 	
 	private void gerarPainelRodape() {
@@ -402,21 +423,34 @@ public class IgBolsoInteligente{
     		valorTotalGanhoMes += receita;
     	}
     	
+    	if(categoriaValoresMensal.size() == 0) {
+    		lblNaoHaDadosGrafico.setText("Não há despesas suficientes para exibir o gráfico");
+			lblNaoHaDadosGrafico.setVisible(true);
+			return;
+    	}
+    	
     	for(int i = 0; i < categoriaValoresMensal.size(); i++) {
     		Object categoriaOuValor = categoriaValoresMensal.get(i);
     		if(categoriaOuValor instanceof String) {
     			continue;
     		}
     		else if(categoriaOuValor instanceof Float){
-    			float porcentagemGastaMensalCategoria;
+    			Float porcentagemGastaMensalCategoria = null;
     			if(valorTotalGanhoMes == 0) {
-    				porcentagemGastaMensalCategoria = 100f;
+    				lblNaoHaDadosGrafico.setText("Não há receitas suficientes para exibir o gráfico");
+    				lblNaoHaDadosGrafico.setVisible(true);
+    				return;
     			}
     			else {
+    				if(lblNaoHaDadosGrafico.isVisible()) {
+    					lblNaoHaDadosGrafico.setVisible(false);
+    				}
     				porcentagemGastaMensalCategoria = (float)categoriaOuValor/valorTotalGanhoMes * 100;
     			}
+    			if(porcentagemGastaMensalCategoria != null) {
+    				categoriaValoresMensal.set(i, porcentagemGastaMensalCategoria);
+    			}
     			
-    			categoriaValoresMensal.set(i, porcentagemGastaMensalCategoria);
     		}
     	}
     	
@@ -453,20 +487,28 @@ public class IgBolsoInteligente{
     			continue;
     		}
     		else if(categoriaOuValor instanceof Float){
-    			float porcentagemGastaMensalCategoria;
+    			Float porcentagemGastaMensalCategoria = null;
     			if(valorTotalGanhoMes == 0) {
-    				porcentagemGastaMensalCategoria = 1f;
+    				lblNaoHaDadosGrafico.setVisible(true);
+    				return;
     			}
     			else {
+    				if(lblNaoHaDadosGrafico.isVisible()) {
+    					lblNaoHaDadosGrafico.setVisible(false);
+    				}
     				porcentagemGastaMensalCategoria = (float)categoriaOuValor/valorTotalGanhoMes;
     			}
-    			categoriaValoresMensal.set(i, porcentagemGastaMensalCategoria);
+    			if(porcentagemGastaMensalCategoria != null) {
+    				categoriaValoresMensal.set(i, porcentagemGastaMensalCategoria);
+    			}
+    			
     		}
     	}
     	
     	for(int i = 0; i < categoriaValoresMensal.size(); i+=2) {
     		dadosGraficoBarra.setValue((Float)categoriaValoresMensal.get(i+1), (String)categoriaValoresMensal.get(i), "");
     	}
+    	
     }
 	
 	private JFreeChart gerarGraficoPizza3D(DefaultPieDataset dadosGrafico, String tituloGrafico, boolean exibirLegenda, boolean exibirToolTips, boolean exibirUrls ) {
@@ -591,11 +633,8 @@ public class IgBolsoInteligente{
 
 	private void operacoesImportacao() {
 		importarArquivos();
-		tabelaDespesa.atualizarDadosTabela(obterCategoriaSelecionada(), obterNumeroMesSelecionado());
-		definirValoresJLabelValores();
 		atualizarCategoriasExibidas();
-		inserirDadosGraficoBarra((DefaultCategoryDataset)graficoBarras.getPlotGraficoBarras().getDataset());
-		inserirDadosGraficoPizza3D((DefaultPieDataset)graficoPizza3D.getPlotGraficoPizza3D().getDataset());
+		atualizarDadosDeAcordoCategoriaMes();
 	}
 	
 	private void importarArquivos() {

@@ -9,6 +9,7 @@ public class Receita {
 	private LocalDate data;
 	private String descricao;
 	private float valor;
+	private long codigo;
 	
 	public Receita() {}
 	
@@ -21,6 +22,15 @@ public class Receita {
 	public LocalDate getData() {
 		return data;
 	}
+	
+	public long getCodigo() {
+		return codigo;
+	}
+
+	public void setCodigo(long codigo) {
+		this.codigo = codigo;
+	}
+
 	public void setData(LocalDate data) {
 		this.data = data;
 	}

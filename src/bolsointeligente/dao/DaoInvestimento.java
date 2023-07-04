@@ -2,9 +2,13 @@ package bolsointeligente.dao;
 
 import java.sql.Connection;
 
+
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+
 
 import bolsointeligente.entities.Investimento;
 import bolsointeligente.utils.DataHora;
@@ -49,8 +53,58 @@ public class DaoInvestimento extends Dao<Investimento> {
 
 	@Override
 	public List<Investimento> select() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		List<Investimento>investimentos = new ArrayList<>();
+		PreparedStatement preparedStatement = null;
+		Connection conexaoBanco = getConexaoBanco();
+		String sqlObterInvestimentos = "SELECT * FROM investimento";
+		
+		preparedStatement = conexaoBanco.prepareStatement(sqlObterInvestimentos);
+		
+		ResultSet tabelaDados = preparedStatement.executeQuery();
+		
+		while(tabelaDados.next()) {
+			Investimento investimento = new Investimento();
+			investimento.setCodigo(tabelaDados.getLong("codigo"));
+			investimento.setObjetivo(tabelaDados.getString("objetivo"));
+			investimento.setEstrategia(tabelaDados.getString("estrategia"));
+			investimento.setNome(tabelaDados.getString("nome"));
+			investimento.setValorInvestido(tabelaDados.getFloat("valor_investido"));
+			investimento.setPosicao(tabelaDados.getFloat("posicao"));
+			investimento.setRendimentoBruto(tabelaDados.getFloat("rendimento_bruto"));
+			investimento.setRentabilidade(tabelaDados.getFloat("rentabilidade"));
+			investimento.setVencimento(tabelaDados.getDate("vencimento").toLocalDate());
+			investimentos.add(investimento);
+			
+		}
+		return investimentos;
 	}
+	
+	public Float selectValorTotalInvestido() throws SQLException{
+		PreparedStatement preparedStatement = null;
+		Connection conexaoBanco = getConexaoBanco();
+		String sqlObterValorTotalInvestido = "SELECT SUM(valor_investido) FROM investimento";
+		
+		preparedStatement = conexaoBanco.prepareStatement(sqlObterValorTotalInvestido);
+		
+		ResultSet tabelaDados = preparedStatement.executeQuery();
+		
+		return (tabelaDados.next()) ? tabelaDados.getFloat("sum") : 0;
+		
+	}
+	
+	public Float selectValorTotalAcumulado() throws SQLException{
+		PreparedStatement preparedStatement = null;
+		Connection conexaoBanco = getConexaoBanco();
+		String sqlObterValorTotalInvestido = "SELECT SUM(posicao) FROM investimento";
+		
+		preparedStatement = conexaoBanco.prepareStatement(sqlObterValorTotalInvestido);
+		
+		ResultSet tabelaDados = preparedStatement.executeQuery();
+		
+		return (tabelaDados.next()) ? tabelaDados.getFloat("sum") : 0;
+		
+	}
+	
+	
 
 }

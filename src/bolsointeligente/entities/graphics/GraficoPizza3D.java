@@ -1,7 +1,7 @@
-package bolsointeligente.entities;
+package bolsointeligente.entities.graphics;
 
 import java.awt.Color;
-import java.text.AttributedString;
+
 import java.text.DecimalFormat;
 
 import org.jfree.chart.JFreeChart;
@@ -11,7 +11,6 @@ import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 import org.jfree.chart.labels.StandardPieToolTipGenerator;
 import org.jfree.chart.plot.PieLabelLinkStyle;
 import org.jfree.chart.plot.PiePlot3D;
-import org.jfree.data.general.PieDataset;
 
 public class GraficoPizza3D{
 	
@@ -32,7 +31,7 @@ public class GraficoPizza3D{
 	
 	private final PieToolTipGenerator GERADOR_TEXTO_AJUDA = new StandardPieToolTipGenerator("{0}: {1}%",FORMATO_DECIMAL,FORMATO_DECIMAL);
 	
-	private final float TRANSPARENCIA_GRAFICO = 0.6f;
+	private final float TRANSPARENCIA_GRAFICO = 0.5f;
 
 	public GraficoPizza3D(JFreeChart graficoPizza3D) throws ClassCastException{
 		this.graficoPizza3D = graficoPizza3D;

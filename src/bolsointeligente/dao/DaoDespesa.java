@@ -1,7 +1,6 @@
 package bolsointeligente.dao;
 
 import java.sql.Connection;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,13 +23,15 @@ public class DaoDespesa extends Dao<Despesa> {
 	@Override
 	public void insert(Despesa despesa) throws SQLException {
 
+
+
 		PreparedStatement preparedStatement = null;
 		Connection conexaoBanco = getConexaoBanco();
 
 		long codigoFormaPagamento = obterCodigoFormaPagamento(despesa.getFormaPagamento());
 		
 		if(codigoFormaPagamento == NAO_CADASTRADO) {
-			inserirFormaPagamento(preparedStatement,conexaoBanco,despesa);
+			inserirFormaPagamento(preparedStatement,conexaoBanco,despesa.getFormaPagamento());
 			codigoFormaPagamento = obterCodigoFormaPagamento(despesa.getFormaPagamento());
 		}
 		
@@ -41,19 +42,14 @@ public class DaoDespesa extends Dao<Despesa> {
 			codigoCategoria = obterCodigoCategoria(despesa.getCategoria());
 		}
 		
-		long codigoDespesa = obterCodigoDespesa(despesa.getDescricao(),codigoCategoria);
 		
-		if(codigoDespesa == NAO_CADASTRADO) {
-			inserirDespesa(preparedStatement,conexaoBanco,despesa,codigoCategoria);
-			codigoDespesa = obterCodigoDespesa(despesa.getDescricao(), codigoCategoria);
-		}
+		inserirDespesa(preparedStatement,conexaoBanco,despesa.getDescricao(),codigoCategoria);
+		long codigoDespesa = obterUltimoCodigoInseridoDespesa();
 		
 		inserirOrcamento(preparedStatement, conexaoBanco, despesa, codigoDespesa,codigoFormaPagamento);
 	}
 	
-
 	private void inserirOrcamento(PreparedStatement preparedStatement, Connection conexaoBanco, Despesa despesa,
-
 			long codigoDespesa, long codigoFormaPagamento) throws SQLException {
 		
 		String sqlOrcamento = "INSERT INTO orcamento (mes_ano,cod_despesa,data_despesa,data_pagamento,cod_forma_pagamento,valor,situacao) "
@@ -70,12 +66,14 @@ public class DaoDespesa extends Dao<Despesa> {
 		
 	}
 
-	private void inserirDespesa(PreparedStatement preparedStatement, Connection conexaoBanco, Despesa despesa, long codigoCategoria) throws SQLException {
+	private void inserirDespesa(PreparedStatement preparedStatement, Connection conexaoBanco, String descricaoDespesa, long codigoCategoria) throws SQLException {
+
+
 
 		String sqlDespesa = "INSERT INTO despesa (descricao, cod_categoria) "
 						  + "VALUES (?, ?)";
 		preparedStatement = conexaoBanco.prepareStatement(sqlDespesa);
-		preparedStatement.setString(1, despesa.getDescricao());
+		preparedStatement.setString(1, descricaoDespesa);
 		preparedStatement.setLong(2, codigoCategoria);
 		preparedStatement.execute();
 	}
@@ -89,16 +87,19 @@ public class DaoDespesa extends Dao<Despesa> {
 		preparedStatement.execute();
 	}
 
-	private void inserirFormaPagamento(PreparedStatement preparedStatement, Connection conexaoBanco, Despesa despesa) throws SQLException {
+	private void inserirFormaPagamento(PreparedStatement preparedStatement, Connection conexaoBanco, String formaPagamento) throws SQLException {
+		
+
 		String sqlFormaPagamento = "INSERT INTO forma_pagamento (descricao) "
 								 + "VALUES (?)";
 		
 		preparedStatement = conexaoBanco.prepareStatement(sqlFormaPagamento);
-		preparedStatement.setString(1, despesa.getFormaPagamento());
+		preparedStatement.setString(1, formaPagamento);
 		preparedStatement.execute();
 	}
 
 	private long obterCodigoFormaPagamento(String descricaoFormaPagamento) throws SQLException {
+
 
 		String sqlObterCodigo = "SELECT codigo "
 							  + "FROM forma_pagamento "
@@ -123,29 +124,91 @@ public class DaoDespesa extends Dao<Despesa> {
 		return (tabelaDados.next()) ? tabelaDados.getLong("codigo") : NAO_CADASTRADO;
 	}
 	
-	private long obterCodigoDespesa(String descricaoDespesa, long codigoCategoria) throws SQLException {
-		String sqlObterCodigo = "SELECT codigo "
-							  + "FROM despesa "
-							  + "WHERE descricao = ? "
-							  + "AND cod_categoria = ?";
-		
+	private long obterUltimoCodigoInseridoDespesa() throws SQLException {
+		String sqlObterCodigo = "SELECT MAX(codigo) AS codigo FROM despesa";
+							  
 		PreparedStatement preparedStatement = getConexaoBanco().prepareStatement(sqlObterCodigo);
-		preparedStatement.setString(1, descricaoDespesa);
-		preparedStatement.setLong(2, codigoCategoria);
 		ResultSet tabelaDados = preparedStatement.executeQuery();
 		
 		return (tabelaDados.next()) ? tabelaDados.getLong("codigo") : NAO_CADASTRADO;
 	}
+	
 
 	
 	@Override
-	public void update(Despesa despesa) throws SQLException {
+	public void update(Despesa despesaAtualizar) throws SQLException {
+		PreparedStatement preparedStatement = null;
+		Connection conexaoBanco = getConexaoBanco();
+		Despesa despesaCadastrada = selectDespesaPorCodigo(despesaAtualizar.getCodigo());
 		
+		long codigoDespesaAtualizar = -1;
+		long codigoFormaPagamentoAtualizar = -1;
+		
+		
+		if(despesaCadastrada.getFormaPagamento().compareToIgnoreCase(despesaAtualizar.getFormaPagamento()) != 0) {
+			codigoFormaPagamentoAtualizar = obterCodigoFormaPagamento(despesaAtualizar.getFormaPagamento());
+			if(codigoFormaPagamentoAtualizar == NAO_CADASTRADO) {
+				inserirFormaPagamento(preparedStatement, conexaoBanco, despesaAtualizar.getFormaPagamento());
+				codigoFormaPagamentoAtualizar = obterCodigoFormaPagamento(despesaAtualizar.getFormaPagamento());
+			}
+			
+		}
+		else if(despesaCadastrada.getDescricao().compareTo(despesaAtualizar.getDescricao()) != 0){
+			long codigoCategoriaDespesaCadastrada = obterCodigoCategoria(despesaCadastrada.getCategoria());
+			inserirDespesa(preparedStatement, conexaoBanco, despesaAtualizar.getDescricao(), codigoCategoriaDespesaCadastrada);
+			codigoDespesaAtualizar = obterUltimoCodigoInseridoDespesa();
+		}
+		if(codigoDespesaAtualizar != -1) {
+			// desc despesa é diferente da cadastrada
+			String sqlAtualizarOrcamentoCodDespesa = "UPDATE orcamento "
+												   + "SET cod_despesa = ?, data_despesa = ?, data_pagamento = ?, valor = ?, situacao = ? "
+												   + "WHERE cod_despesa = ?";
+			
+			preparedStatement = conexaoBanco.prepareStatement(sqlAtualizarOrcamentoCodDespesa);
+			preparedStatement.setLong(1, codigoDespesaAtualizar);
+			preparedStatement.setDate(2, DataHora.converterLocalDateParaDate(despesaAtualizar.getData()));
+			preparedStatement.setDate(3, DataHora.converterMonthDayParaDate(despesaAtualizar.getDiaPagamento()));
+			preparedStatement.setFloat(4, despesaAtualizar.getValor());
+			preparedStatement.setBoolean(5, despesaAtualizar.getSituacao());
+			preparedStatement.setLong(6, despesaCadastrada.getCodigo());
+			
+		}else if(codigoFormaPagamentoAtualizar != -1) {
+			// desc forma pagamento é diferente da cadastrada
+			String sqlAtualizarOrcamentoCodFormaPagamento = "UPDATE orcamento "
+					   							   + "SET cod_forma_pagamento = ?, data_despesa = ?, data_pagamento = ?, valor = ?, situacao = ? "
+					   							   + "WHERE cod_despesa = ?";
+			
+			
+			preparedStatement = conexaoBanco.prepareStatement(sqlAtualizarOrcamentoCodFormaPagamento);
+			preparedStatement.setLong(1, codigoFormaPagamentoAtualizar);
+			preparedStatement.setDate(2, DataHora.converterLocalDateParaDate(despesaAtualizar.getData()));
+			preparedStatement.setDate(3, DataHora.converterMonthDayParaDate(despesaAtualizar.getDiaPagamento()));
+			preparedStatement.setFloat(4, despesaAtualizar.getValor());
+			preparedStatement.setBoolean(5, despesaAtualizar.getSituacao());
+			preparedStatement.setLong(6, despesaAtualizar.getCodigo());
+			
+		}else {
+			// nem a forma de pagamento foi alterada e nem a descrição da despesa.
+			String sqlAtualizarOrcamentoCodFormaPagamento = "UPDATE orcamento "
+					   + "SET data_despesa = ?, data_pagamento = ?, valor = ?, situacao = ? "
+					   + "WHERE cod_despesa = ?";
+
+
+			preparedStatement = conexaoBanco.prepareStatement(sqlAtualizarOrcamentoCodFormaPagamento);
+			preparedStatement.setDate(1, DataHora.converterLocalDateParaDate(despesaAtualizar.getData()));
+			preparedStatement.setDate(2, DataHora.converterMonthDayParaDate(despesaAtualizar.getDiaPagamento()));
+			preparedStatement.setFloat(3, despesaAtualizar.getValor());
+			preparedStatement.setBoolean(4, despesaAtualizar.getSituacao());
+			preparedStatement.setLong(5, despesaAtualizar.getCodigo());
+		}
+		preparedStatement.execute();
+		preparedStatement.close();
 	}
+
 
 	@Override
 	public void delete(Despesa despesa) throws SQLException {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
@@ -154,7 +217,7 @@ public class DaoDespesa extends Dao<Despesa> {
 	public List<Despesa> select() throws SQLException {
 
 		List<Despesa> despesas = new ArrayList<>();
-		String sqlConsultaDespesa = "SELECT orc.data_despesa, orc.data_pagamento, pag.descricao AS forma_pagamento, desp.descricao AS descricao, orc.valor, orc.situacao, cat.descricao AS categoria "
+		String sqlConsultaDespesa = "SELECT orc.data_despesa, orc.data_pagamento, pag.descricao AS forma_pagamento, desp.descricao AS descricao, orc.valor, orc.situacao, cat.descricao, orc.cod_despesa AS categoria "
 							+ "FROM orcamento AS orc "
 							+ "INNER JOIN despesa AS desp "
 							+ "ON orc.cod_despesa = desp.codigo "
@@ -175,6 +238,7 @@ public class DaoDespesa extends Dao<Despesa> {
 				despesa.setValor(tabelaDados.getFloat("valor"));
 				despesa.setSituacao(tabelaDados.getBoolean("situacao"));
 				despesa.setCategoria(tabelaDados.getString("categoria"));
+				despesa.setCodigo(tabelaDados.getLong("cod_despesa"));
 				despesas.add(despesa);
 			}
 		}
@@ -182,6 +246,7 @@ public class DaoDespesa extends Dao<Despesa> {
 	}
 	
 	public List<Object> selectValoresSituacaoDespesas() throws SQLException{
+
 		List<Object> valoresSituacaoDespesas = new ArrayList<>();
 		String sqlConsultarValoresDespesa = "SELECT valor,situacao FROM orcamento";
 		try (PreparedStatement preparedStatement = getConexaoBanco().prepareStatement(sqlConsultarValoresDespesa)){
@@ -194,11 +259,42 @@ public class DaoDespesa extends Dao<Despesa> {
 		return valoresSituacaoDespesas;
 	}
 	
+	private Despesa selectDespesaPorCodigo(long codigoDespesa) throws SQLException{
+		String sqlDespesaPorCodigo = "SELECT orc.mes_ano, orc.data_despesa, orc.data_pagamento, pag.descricao AS forma_pagamento, desp.descricao AS descricao, orc.valor, orc.situacao, cat.descricao AS categoria "
+								   + "FROM orcamento AS orc "
+								   + "INNER JOIN despesa AS desp "
+								   + "ON orc.cod_despesa = desp.codigo "
+								   + "INNER JOIN forma_pagamento AS pag "
+								   + "ON orc.cod_forma_pagamento = pag.codigo "
+								   + "INNER JOIN categoria AS cat "
+								   + "ON desp.cod_categoria = cat.codigo "
+								   + "WHERE orc.cod_despesa = ?";
+		
+		Despesa despesa = new Despesa();
+		try(PreparedStatement preparedStatement = getConexaoBanco().prepareStatement(sqlDespesaPorCodigo)){
+			preparedStatement.setLong(1, codigoDespesa);
+			ResultSet tabelaDados = preparedStatement.executeQuery();
+			while(tabelaDados.next()) {
+				despesa.setCategoria(tabelaDados.getString("categoria"));
+				despesa.setData(tabelaDados.getDate("data_despesa").toLocalDate());
+				despesa.setDescricao(tabelaDados.getString("descricao"));
+				LocalDate dataPagamento = tabelaDados.getDate("data_pagamento").toLocalDate();
+				despesa.setDiaPagamento(MonthDay.of(dataPagamento.getMonthValue(), dataPagamento.getDayOfMonth()));
+				despesa.setFormaPagamento(tabelaDados.getString("forma_pagamento"));
+				despesa.setSituacao(tabelaDados.getBoolean("situacao"));
+				despesa.setValor(tabelaDados.getFloat("valor"));
+				despesa.setCodigo(codigoDespesa);
+			}
+		}
+		
+		
+		return despesa;
+	}
 	
 	public List<Despesa> selectDespesaPorCategoria(String categoria, int numeroMes) throws SQLException{
 		List<Despesa>despesasCategoria = new ArrayList<>();
 		
-		String sqlDespesaPorCategoria = "SELECT orc.mes_ano, orc.data_despesa, orc.data_pagamento, pag.descricao AS forma_pagamento, desp.descricao AS descricao, orc.valor, orc.situacao, cat.descricao AS categoria "
+		String sqlDespesaPorCategoria = "SELECT orc.mes_ano, orc.data_despesa, orc.data_pagamento, pag.descricao AS forma_pagamento, desp.descricao AS descricao, orc.valor, orc.situacao, cat.descricao AS categoria, orc.cod_despesa "
 				+ "FROM orcamento AS orc "
 				+ "INNER JOIN despesa AS desp "
 				+ "ON orc.cod_despesa = desp.codigo "
@@ -209,32 +305,7 @@ public class DaoDespesa extends Dao<Despesa> {
 				+ "WHERE cat.descricao = ? AND orc.mes_ano = ?";
 		
 		if(categoria.equalsIgnoreCase("todas")) {
-			String sqlTodasDespesasMes = "SELECT orc.mes_ano, orc.data_despesa, orc.data_pagamento, pag.descricao AS forma_pagamento, desp.descricao AS descricao, orc.valor, orc.situacao, cat.descricao AS categoria "
-					+ "FROM orcamento AS orc "
-					+ "INNER JOIN despesa AS desp "
-					+ "ON orc.cod_despesa = desp.codigo "
-					+ "INNER JOIN forma_pagamento AS pag "
-					+ "ON orc.cod_forma_pagamento = pag.codigo "
-					+ "INNER JOIN categoria AS cat "
-					+ "ON desp.cod_categoria = cat.codigo "
-					+ "WHERE orc.mes_ano = ?";
-			
-			try (PreparedStatement preparedStatement = getConexaoBanco().prepareStatement(sqlTodasDespesasMes)){
-				preparedStatement.setInt(1, numeroMes);
-				ResultSet tabelaDados = preparedStatement.executeQuery();
-				while(tabelaDados.next()) {
-					Despesa despesa = new Despesa();
-					despesa.setData(tabelaDados.getDate("data_despesa").toLocalDate());
-					LocalDate dataPagamento = tabelaDados.getDate("data_pagamento").toLocalDate();
-					despesa.setDiaPagamento(MonthDay.of(dataPagamento.getMonthValue(), dataPagamento.getDayOfMonth()));
-					despesa.setFormaPagamento(tabelaDados.getString("forma_pagamento"));
-					despesa.setDescricao(tabelaDados.getString("descricao"));
-					despesa.setValor(tabelaDados.getFloat("valor"));
-					despesa.setSituacao(tabelaDados.getBoolean("situacao"));
-					despesa.setCategoria(tabelaDados.getString("categoria"));
-					despesasCategoria.add(despesa);
-				}
-			}
+			return selectTodasDespesasMensais(numeroMes);
 		}
 		else {
 			try (PreparedStatement preparedStatement = getConexaoBanco().prepareStatement(sqlDespesaPorCategoria)){
@@ -251,11 +322,44 @@ public class DaoDespesa extends Dao<Despesa> {
 					despesa.setValor(tabelaDados.getFloat("valor"));
 					despesa.setSituacao(tabelaDados.getBoolean("situacao"));
 					despesa.setCategoria(tabelaDados.getString("categoria"));
+					despesa.setCodigo(tabelaDados.getLong("cod_despesa"));
 					despesasCategoria.add(despesa);
 				}
 			}
 		}
 		return despesasCategoria;
+	}
+	
+	private List<Despesa> selectTodasDespesasMensais(int numeroMes) throws SQLException{
+		String sqlTodasDespesasMes = "SELECT orc.mes_ano, orc.data_despesa, orc.data_pagamento, pag.descricao AS forma_pagamento, desp.descricao AS descricao, orc.valor, orc.situacao, cat.descricao AS categoria, orc.cod_despesa "
+				+ "FROM orcamento AS orc "
+				+ "INNER JOIN despesa AS desp "
+				+ "ON orc.cod_despesa = desp.codigo "
+				+ "INNER JOIN forma_pagamento AS pag "
+				+ "ON orc.cod_forma_pagamento = pag.codigo "
+				+ "INNER JOIN categoria AS cat "
+				+ "ON desp.cod_categoria = cat.codigo "
+				+ "WHERE orc.mes_ano = ?";
+		
+		List<Despesa> despesasMensais = new ArrayList<>();
+		try (PreparedStatement preparedStatement = getConexaoBanco().prepareStatement(sqlTodasDespesasMes)){
+			preparedStatement.setInt(1, numeroMes);
+			ResultSet tabelaDados = preparedStatement.executeQuery();
+			while(tabelaDados.next()) {
+				Despesa despesa = new Despesa();
+				despesa.setData(tabelaDados.getDate("data_despesa").toLocalDate());
+				LocalDate dataPagamento = tabelaDados.getDate("data_pagamento").toLocalDate();
+				despesa.setDiaPagamento(MonthDay.of(dataPagamento.getMonthValue(), dataPagamento.getDayOfMonth()));
+				despesa.setFormaPagamento(tabelaDados.getString("forma_pagamento"));
+				despesa.setDescricao(tabelaDados.getString("descricao"));
+				despesa.setValor(tabelaDados.getFloat("valor"));
+				despesa.setSituacao(tabelaDados.getBoolean("situacao"));
+				despesa.setCategoria(tabelaDados.getString("categoria"));
+				despesa.setCodigo(tabelaDados.getLong("cod_despesa"));
+				despesasMensais.add(despesa);
+			}
+		}
+		return despesasMensais;
 	}
 	
 	public List<Object> selectCategoriasValoresMensal(int numeroMes) throws SQLException{
